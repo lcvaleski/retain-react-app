@@ -55,12 +55,25 @@ app.use((req, res, next) => {
 
 app.post('/api/upload', upload.single('audio'), async (req, res) => {
   console.log('Received upload request');
-  console.log('File:', req.file);
+  console.log('Headers:', req.headers);
+  console.log('File details:', {
+    exists: !!req.file,
+    mimetype: req.file?.mimetype,
+    size: req.file?.size
+  });
   
   try {
     if (!req.file) {
+      console.log('No file uploaded');
       return res.status(400).json({ message: 'No file uploaded' });
     }
+
+    // Log GCS configuration
+    console.log('GCS Config:', {
+      projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
+      bucketName: process.env.GOOGLE_CLOUD_BUCKET_NAME,
+      hasCredentials: !!process.env.GOOGLE_CLOUD_CREDENTIALS
+    });
 
     // Validate file type
     const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4'];
@@ -80,36 +93,55 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
       },
     });
 
-    // Handle errors
+    // Add error logging to the blobStream
     blobStream.on('error', (error) => {
-      console.error('Upload error:', error);
-      res.status(500).json({ message: 'Upload failed' });
+      console.error('Upload error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
+      res.status(500).json({ message: 'Upload failed', details: error.message });
     });
 
     // Handle success
     blobStream.on('finish', async () => {
       try {
-        // Generate signed URL that expires in 1 hour
+        console.log('Upload finished, generating signed URL');
         const [signedUrl] = await blob.getSignedUrl({
           action: 'read',
-          expires: Date.now() + 60 * 60 * 1000, // 1 hour
+          expires: Date.now() + 60 * 60 * 1000,
         });
+        console.log('Signed URL generated successfully');
         
         res.status(200).json({
           message: 'Upload successful',
           url: signedUrl
         });
       } catch (error) {
-        console.error('Signed URL error:', error);
-        res.status(500).json({ message: 'Failed to generate signed URL' });
+        console.error('Signed URL error details:', {
+          code: error.code,
+          message: error.message,
+          stack: error.stack
+        });
+        res.status(500).json({ 
+          message: 'Failed to generate signed URL',
+          details: error.message 
+        });
       }
     });
 
     blobStream.end(req.file.buffer);
 
   } catch (error) {
-    console.error('Server error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Server error details:', {
+      code: error.code,
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ 
+      message: 'Server error',
+      details: error.message
+    });
   }
 });
 

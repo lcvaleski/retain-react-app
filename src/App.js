@@ -47,14 +47,25 @@ function App() {
       try {
         data = JSON.parse(responseText);
       } catch (e) {
-        throw new Error(`Failed to parse response: ${responseText}`);
+        console.error('Parse error:', {
+          text: responseText,
+          error: e.message
+        });
+        throw new Error(`Failed to parse response: ${responseText.substring(0, 100)}...`);
       }
 
-      console.log('Upload successful:', data.url);
+      if (!response.ok) {
+        throw new Error(data.details || data.message || 'Upload failed');
+      }
+
+      console.log('Upload successful:', data);
       setSuccessMessage('Audio uploaded successfully!');
       
     } catch (error) {
-      console.error('Error details:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
       setError(error.message);
       setSuccessMessage(null);
     } finally {
