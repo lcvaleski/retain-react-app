@@ -3,6 +3,7 @@ const multer = require('multer');
 const { Storage } = require('@google-cloud/storage');
 const path = require('path');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
@@ -58,7 +59,25 @@ const debug = (...args) => {
   console.log(JSON.stringify(args, null, 2));
 };
 
-app.post('/api/upload', upload.single('audio'), async (req, res) => {
+// Rate limiting middleware
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 10, // limit each IP to 10 uploads per hour
+  message: { message: 'Too many uploads, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Add before the upload
+const STORAGE_QUOTA_BYTES = 10 * 1024 * 1024 * 1024; // 10GB total storage
+
+async function checkStorageQuota() {
+  const [files] = await bucket.getFiles();
+  const totalSize = files.reduce((acc, file) => acc + parseInt(file.metadata.size), 0);
+  return totalSize < STORAGE_QUOTA_BYTES;
+}
+
+app.post('/api/upload', uploadLimiter, upload.single('audio'), async (req, res) => {
   debug('Received upload request', {
     headers: req.headers,
     fileDetails: {
@@ -85,6 +104,12 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
     const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4'];
     if (!allowedTypes.includes(req.file.mimetype)) {
       return res.status(400).json({ message: 'Invalid file type' });
+    }
+
+    // Check storage quota
+    const underQuota = await checkStorageQuota();
+    if (!underQuota) {
+      return res.status(507).json({ message: 'Storage quota exceeded' });
     }
 
     // Create unique filename
