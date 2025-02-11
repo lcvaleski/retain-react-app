@@ -7,7 +7,6 @@
   pointer-events: none;
 }
 
-
 .App-header {
   background-color: #F6D7B0;
   min-height: 100vh;
@@ -34,4 +33,43 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.upload-section {
+  margin-top: 20px;
+}
+
+.upload-section input[type="file"] {
+  display: none;
+}
+
+.upload-button {
+  background-color: #4a4a4a;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.upload-button:hover {
+  background-color: #333;
+}
+
+.upload-button.uploading {
+  background-color: #666;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #d32f2f;
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+.success-message {
+  color: #2e7d32;  /* Dark green color */
+  margin-top: 10px;
+  font-size: 0.9em;
+  font-weight: bold;
 }
