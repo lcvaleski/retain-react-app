@@ -6,7 +6,6 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3001;
 
 // Add CORS and JSON middleware
 app.use(cors());
@@ -53,23 +52,29 @@ app.use((req, res, next) => {
   next();
 });
 
+// Add this at the top of the file
+const debug = (...args) => {
+  console.log(JSON.stringify(args, null, 2));
+};
+
 app.post('/api/upload', upload.single('audio'), async (req, res) => {
-  console.log('Received upload request');
-  console.log('Headers:', req.headers);
-  console.log('File details:', {
-    exists: !!req.file,
-    mimetype: req.file?.mimetype,
-    size: req.file?.size
+  debug('Received upload request', {
+    headers: req.headers,
+    fileDetails: {
+      exists: !!req.file,
+      mimetype: req.file?.mimetype,
+      size: req.file?.size
+    }
   });
   
   try {
     if (!req.file) {
-      console.log('No file uploaded');
+      debug('No file uploaded');
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
     // Log GCS configuration
-    console.log('GCS Config:', {
+    debug('GCS Config', {
       projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
       bucketName: process.env.GOOGLE_CLOUD_BUCKET_NAME,
       hasCredentials: !!process.env.GOOGLE_CLOUD_CREDENTIALS
@@ -93,9 +98,9 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
       },
     });
 
-    // Add error logging to the blobStream
+    // Update error logging
     blobStream.on('error', (error) => {
-      console.error('Upload error details:', {
+      debug('Upload error', {
         code: error.code,
         message: error.message,
         stack: error.stack
@@ -103,22 +108,21 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
       res.status(500).json({ message: 'Upload failed', details: error.message });
     });
 
-    // Handle success
     blobStream.on('finish', async () => {
       try {
-        console.log('Upload finished, generating signed URL');
+        debug('Upload finished, generating signed URL');
         const [signedUrl] = await blob.getSignedUrl({
           action: 'read',
           expires: Date.now() + 60 * 60 * 1000,
         });
-        console.log('Signed URL generated successfully');
+        debug('Signed URL generated successfully');
         
         res.status(200).json({
           message: 'Upload successful',
           url: signedUrl
         });
       } catch (error) {
-        console.error('Signed URL error details:', {
+        debug('Signed URL error', {
           code: error.code,
           message: error.message,
           stack: error.stack
@@ -133,7 +137,7 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
     blobStream.end(req.file.buffer);
 
   } catch (error) {
-    console.error('Server error details:', {
+    debug('Server error', {
       code: error.code,
       message: error.message,
       stack: error.stack
@@ -145,6 +149,10 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-}); 
+app.get('/api/test', (req, res) => {
+  debug('Test endpoint hit', { time: new Date().toISOString() });
+  res.json({ message: 'Test successful' });
+});
+
+// Remove the app.listen() call and export the app
+module.exports = app; 
