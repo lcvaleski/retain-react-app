@@ -8,9 +8,10 @@ let analytics = null;
 
 export async function initializeFirebase() {
   try {
-    const response = await fetch('/api/get-firebase-config');
+    const response = await fetch('/api/firebase-config');
     if (!response.ok) {
-      throw new Error('Failed to fetch Firebase configuration');
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch Firebase configuration');
     }
     const firebaseConfig = await response.json();
     

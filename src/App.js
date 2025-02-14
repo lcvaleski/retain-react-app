@@ -2,36 +2,15 @@ import logo from './logo.svg';
 import './App.css';
 import { useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
+import AuthForm from './components/AuthForm';
 
 function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const { currentUser, signup, login, logout } = useAuth();
+  const { currentUser, logout } = useAuth();
   
   console.log('Current user:', currentUser);
-
-  const handleTestSignup = async () => {
-    try {
-      await signup('test@example.com', 'password123');
-      setSuccessMessage('Signup successful!');
-      setError(null);
-    } catch (error) {
-      console.error('Signup error:', error);
-      setError(error.message);
-    }
-  };
-
-  const handleTestLogin = async () => {
-    try {
-      await login('test@example.com', 'password123');
-      setSuccessMessage('Login successful!');
-      setError(null);
-    } catch (error) {
-      console.error('Login error:', error);
-      setError(error.message);
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -113,39 +92,45 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo"/>
-        <p>
-          We save photos, letters, and videos of our loved ones.<br />
-          Why not their voices?
-        </p>
-        {currentUser ? (
-          <>
-            <p>Welcome, {currentUser.email}!</p>
-            <button onClick={handleLogout}>Logout</button>
-          </>
-        ) : (
-          <div>
-            <button onClick={handleTestSignup}>Test Signup</button>
-            <button onClick={handleTestLogin}>Test Login</button>
+        <div className="main-content">
+          <img src={logo} className="App-logo" alt="logo"/>
+          <p>
+            We save photos, letters, and videos of our loved ones.<br />
+            Why not their voices?
+          </p>
+          {currentUser ? (
+            <>
+              <div className="upload-section">
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleFileUpload}
+                  id="audio-upload"
+                  disabled={isUploading}
+                />
+                <label 
+                  htmlFor="audio-upload" 
+                  className={`upload-button ${isUploading ? 'uploading' : ''}`}
+                >
+                  {isUploading ? 'Uploading...' : 'Upload Voice Recording'}
+                </label>
+                {error && <p className="error-message">{error}</p>}
+                {successMessage && <p className="success-message">{successMessage}</p>}
+              </div>
+            </>
+          ) : (
+            <AuthForm />
+          )}
+        </div>
+        
+        {currentUser && (
+          <div className="user-section">
+            <p>Signed in as {currentUser.email}</p>
+            <button onClick={handleLogout} className="logout-button">
+              Logout
+            </button>
           </div>
         )}
-        <div className="upload-section">
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={handleFileUpload}
-            id="audio-upload"
-            disabled={isUploading}
-          />
-          <label 
-            htmlFor="audio-upload" 
-            className={`upload-button ${isUploading ? 'uploading' : ''}`}
-          >
-            {isUploading ? 'Uploading...' : 'Upload Voice Recording'}
-          </label>
-          {error && <p className="error-message">{error}</p>}
-          {successMessage && <p className="success-message">{successMessage}</p>}
-        </div>
       </header>
     </div>
   );
