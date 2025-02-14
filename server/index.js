@@ -4,7 +4,8 @@ const { Storage } = require('@google-cloud/storage');
 const path = require('path');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+const envPath = process.env.NODE_ENV === 'production' ? '.env' : '.env.local';
+require('dotenv').config({ path: envPath });
 
 const app = express();
 
