@@ -30,17 +30,21 @@ const upload = multer({
 });
 
 // Initialize Google Cloud Storage with explicit credentials
-const storage = new Storage({
-  projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
-  credentials: {
-    client_email: process.env.GOOGLE_CLOUD_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_CLOUD_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-  }
-});
+let storage;
+let bucket;
 
-const bucket = storage.bucket(process.env.GOOGLE_CLOUD_BUCKET_NAME);
+if (process.env.GOOGLE_CLOUD_BUCKET_NAME) {
+  storage = new Storage({
+    projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
+    credentials: {
+      client_email: process.env.GOOGLE_CLOUD_CLIENT_EMAIL,
+      private_key: process.env.GOOGLE_CLOUD_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }
+  });
 
-// Add this near the top after middleware setup
+  bucket = storage.bucket(process.env.GOOGLE_CLOUD_BUCKET_NAME);
+}
+
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`, req.body);
   next();
@@ -54,7 +58,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add this at the top of the file
 const debug = (...args) => {
   console.log(JSON.stringify(args, null, 2));
 };
@@ -78,6 +81,9 @@ async function checkStorageQuota() {
 }
 
 app.post('/api/upload', uploadLimiter, upload.single('audio'), async (req, res) => {
+  if (!bucket) {
+    return res.status(500).json({ message: 'Storage not configured' });
+  }
   debug('Received upload request', {
     headers: req.headers,
     fileDetails: {
@@ -180,5 +186,24 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'Test successful' });
 });
 
-// Remove the app.listen() call and export the app
+app.get('/api/firebase-config', (req, res) => {
+  const firebaseConfig = {
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.REACT_APP_FIREBASE_APP_ID,
+    measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
+  };
+  
+  // Add debug logging
+  debug('Serving Firebase config:', {
+    configPresent: Object.keys(firebaseConfig).filter(key => !!firebaseConfig[key]),
+    configMissing: Object.keys(firebaseConfig).filter(key => !firebaseConfig[key])
+  });
+  
+  res.json(firebaseConfig);
+});
+
 module.exports = app; 

@@ -1,11 +1,48 @@
 import logo from './logo.svg';
 import './App.css';
 import { useState } from 'react';
+import { useAuth } from './contexts/AuthContext';
 
 function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const { currentUser, signup, login, logout } = useAuth();
+  
+  console.log('Current user:', currentUser);
+
+  const handleTestSignup = async () => {
+    try {
+      await signup('test@example.com', 'password123');
+      setSuccessMessage('Signup successful!');
+      setError(null);
+    } catch (error) {
+      console.error('Signup error:', error);
+      setError(error.message);
+    }
+  };
+
+  const handleTestLogin = async () => {
+    try {
+      await login('test@example.com', 'password123');
+      setSuccessMessage('Login successful!');
+      setError(null);
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setSuccessMessage('Logged out successfully!');
+      setError(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      setError(error.message);
+    }
+  };
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -81,6 +118,17 @@ function App() {
           We save photos, letters, and videos of our loved ones.<br />
           Why not their voices?
         </p>
+        {currentUser ? (
+          <>
+            <p>Welcome, {currentUser.email}!</p>
+            <button onClick={handleLogout}>Logout</button>
+          </>
+        ) : (
+          <div>
+            <button onClick={handleTestSignup}>Test Signup</button>
+            <button onClick={handleTestLogin}>Test Login</button>
+          </div>
+        )}
         <div className="upload-section">
           <input
             type="file"

@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Analytics } from '@vercel/analytics/react';
+import { AuthProvider } from './contexts/AuthContext';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
@@ -8,8 +9,10 @@ import reportWebVitals from './reportWebVitals';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
-    <Analytics />
+    <AuthProvider>
+      <App />
+      <Analytics />
+    </AuthProvider>
   </React.StrictMode>
 );
 // If you want to start measuring performance in your app, pass a function
