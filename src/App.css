@@ -3,7 +3,7 @@
 }
 
 .App-logo {
-  height: 9vmin;
+  height: 7vmin;
   pointer-events: none;
 }
 
@@ -28,6 +28,12 @@
 
 .App-header p {
   padding: 0 40px;
+  color: #666;
+  font-size: 1.2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  line-height: 1.4;
 }
 
 .App-link {
