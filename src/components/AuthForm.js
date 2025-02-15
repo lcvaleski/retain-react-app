@@ -6,6 +6,7 @@ export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const { login, signup, loginWithGoogle, resetPassword } = useAuth();
@@ -18,6 +19,10 @@ export default function AuthForm() {
       if (isLogin) {
         await login(email, password);
       } else {
+        if (password !== passwordConfirm) {
+          setError('Passwords do not match');
+          return;
+        }
         await signup(email, password);
       }
     } catch (err) {
@@ -70,6 +75,15 @@ export default function AuthForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        {!isLogin && (
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            required
+          />
+        )}
         <button type="submit">
           {isLogin ? 'Login' : 'Sign Up'}
         </button>
