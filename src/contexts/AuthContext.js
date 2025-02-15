@@ -6,7 +6,8 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 
 const AuthContext = createContext();
@@ -76,12 +77,20 @@ export function AuthProvider({ children }) {
     return signInWithPopup(auth, provider);
   }
 
+  async function resetPassword(email) {
+    if (!auth) {
+      throw new Error('Authentication not initialized');
+    }
+    return sendPasswordResetEmail(auth, email);
+  }
+
   const value = {
     currentUser,
     signup,
     login,
     logout,
     loginWithGoogle,
+    resetPassword,
     error,
     loading
   };

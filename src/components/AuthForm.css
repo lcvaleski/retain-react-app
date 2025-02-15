@@ -126,4 +126,31 @@
 
 .divider span {
   padding: 0 0.75rem;
+}
+
+.auth-message {
+  color: #2e7d32;
+  text-align: center;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  background: #e8f5e9;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.forgot-password-button {
+  background: none !important;
+  color: #4a4a4a !important;
+  padding: 0 !important;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  border: none !important;
+  width: auto !important;
+  display: block !important;
+  margin: 0.5rem auto 0;
+  cursor: pointer;
+}
+
+.forgot-password-button:hover {
+  color: #333 !important;
 } 

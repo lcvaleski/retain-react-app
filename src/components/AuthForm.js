@@ -7,7 +7,8 @@ export default function AuthForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, signup, loginWithGoogle } = useAuth();
+  const [message, setMessage] = useState('');
+  const { login, signup, loginWithGoogle, resetPassword } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,10 +33,27 @@ export default function AuthForm() {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    try {
+      setError('');
+      setMessage('');
+      if (!email) {
+        setError('Please enter your email address');
+        return;
+      }
+      await resetPassword(email);
+      setMessage('Check your email for password reset instructions');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="auth-form-container">
       <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
       {error && <div className="auth-error">{error}</div>}
+      {message && <div className="auth-message">{message}</div>}
       
       <form onSubmit={handleSubmit}>
         <input
@@ -55,6 +73,15 @@ export default function AuthForm() {
         <button type="submit">
           {isLogin ? 'Login' : 'Sign Up'}
         </button>
+        {isLogin && (
+          <button 
+            type="button"
+            className="forgot-password-button"
+            onClick={handleForgotPassword}
+          >
+            Forgot Password?
+          </button>
+        )}
       </form>
 
       <div className="divider">
