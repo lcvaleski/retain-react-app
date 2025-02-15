@@ -11,6 +11,22 @@ export default function AuthForm() {
   const [message, setMessage] = useState('');
   const { login, signup, loginWithGoogle, resetPassword } = useAuth();
 
+  const validatePassword = (password) => {
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    if (!hasNumber) {
+      return 'Password must contain at least one number';
+    }
+    if (!hasSpecialChar) {
+      return 'Password must contain at least one special character';
+    }
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -19,6 +35,13 @@ export default function AuthForm() {
       if (isLogin) {
         await login(email, password);
       } else {
+        // Password validation for signup
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+          setError(passwordError);
+          return;
+        }
+
         if (password !== passwordConfirm) {
           setError('Passwords do not match');
           return;
