@@ -58,20 +58,27 @@
 }
 
 .upload-button {
-  background-color: #4a4a4a;
+  padding: 0.6rem;
+  background: #4a4a4a;
   color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background 0.2s;
+  width: 100%;
+  max-width: 320px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
 }
 
 .upload-button:hover {
-  background-color: #333;
+  background: #333;
 }
 
 .upload-button.uploading {
-  background-color: #666;
+  background: #666;
   cursor: not-allowed;
 }
 
