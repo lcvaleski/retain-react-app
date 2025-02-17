@@ -182,11 +182,6 @@ app.post('/api/upload', uploadLimiter, upload.single('audio'), async (req, res) 
   }
 });
 
-app.get('/api/test', (req, res) => {
-  debug('Test endpoint hit', { time: new Date().toISOString() });
-  res.json({ message: 'Test successful' });
-});
-
 app.get('/api/firebase-config', (req, res) => {
   const firebaseConfig = {
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
