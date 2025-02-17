@@ -108,7 +108,13 @@ app.post('/api/upload', uploadLimiter, upload.single('audio'), async (req, res) 
     });
 
     // Validate file type
-    const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4'];
+    const allowedTypes = [
+      'audio/mpeg',    // MP3 files
+      'audio/wav',     // WAV files
+      'audio/mp4',     // MP4 audio
+      'audio/m4a',     // M4A files (common format for iPhone voice recordings)
+      'audio/x-m4a'    // Alternative MIME type for M4A files
+    ];
     if (!allowedTypes.includes(req.file.mimetype)) {
       return res.status(400).json({ message: 'Invalid file type' });
     }
