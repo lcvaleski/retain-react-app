@@ -41,9 +41,16 @@ router.post('/upload', uploadLimiter, upload.single('audio'), async (req, res) =
 
 router.post('/tts', async (req, res) => {
   try {
+    debug('TTS Endpoint Hit:', {
+      body: req.body,
+      headers: req.headers,
+      timestamp: new Date().toISOString()
+    });
+
     const { voiceId, text } = req.body;
     
     if (!voiceId || !text) {
+      debug('TTS Missing Fields:', { voiceId, text });
       return res.status(400).json({
         message: 'Missing required fields',
         details: 'Both voiceId and text are required'
@@ -52,6 +59,11 @@ router.post('/tts', async (req, res) => {
 
     const audioBuffer = await generateSpeech(voiceId, text);
     
+    debug('TTS Success Response:', {
+      bufferLength: audioBuffer.length,
+      timestamp: new Date().toISOString()
+    });
+
     res.set({
       'Content-Type': 'audio/mpeg',
       'Content-Length': audioBuffer.length
@@ -60,7 +72,11 @@ router.post('/tts', async (req, res) => {
     res.send(audioBuffer);
     
   } catch (error) {
-    debug('TTS Error:', error);
+    debug('TTS Route Error:', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     res.status(500).json({
       message: 'TTS generation failed',
       details: error.message
