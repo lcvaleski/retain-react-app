@@ -10,6 +10,9 @@ function App() {
   const [successMessage, setSuccessMessage] = useState(null);
   const [responseData, setResponseData] = useState(null);
   const { currentUser, logout } = useAuth();
+  const [ttsText, setTtsText] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null);
   
   console.log('Current user:', currentUser);
 
@@ -84,8 +87,6 @@ function App() {
       if (!response.ok) {
         throw new Error(data.details || data.message || 'Upload failed');
       }
-
-      setSuccessMessage('Audio uploaded successfully!');
       
     } catch (error) {
       console.error('Error details:', {
@@ -93,9 +94,38 @@ function App() {
         stack: error.stack
       });
       setError(error.message);
-      setSuccessMessage(null);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const generateSpeech = async (voiceId, text) => {
+    try {
+      setIsGenerating(true);
+      setError(null);
+      
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ voiceId, text })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.details || 'TTS generation failed');
+      }
+
+      const audioBlob = await response.blob();
+      const url = URL.createObjectURL(audioBlob);
+      setAudioUrl(url);
+      
+    } catch (error) {
+      console.error('TTS Error:', error);
+      setError(error.message);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -122,19 +152,51 @@ function App() {
                   htmlFor="audio-upload" 
                   className={`upload-button ${isUploading ? 'uploading' : ''}`}
                 >
-                  {isUploading ? 'Uploading...' : 'Upload Voice Recording'}
+                  {isUploading ? (
+                    <div className="upload-progress">
+                      <div className="spinner"></div>
+                      <span>Processing voice...</span>
+                    </div>
+                  ) : (
+                    'Upload Voice Recording'
+                  )}
                 </label>
                 {error && <p className="error-message">{error}</p>}
                 {successMessage && <p className="success-message">{successMessage}</p>}
-                
-                {/* Add response data display */}
-                {responseData && (
-                  <div className="response-data">
-                    <h3>Response Data:</h3>
-                    <pre>{JSON.stringify(responseData, null, 2)}</pre>
-                  </div>
-                )}
               </div>
+              
+              {responseData?.voiceId && (
+                <div className="tts-container">
+                  <textarea
+                    value={ttsText}
+                    onChange={(e) => setTtsText(e.target.value)}
+                    placeholder="What would you like your voice to say?"
+                    disabled={isGenerating}
+                    className="tts-input"
+                  />
+                  <button
+                    onClick={() => generateSpeech(responseData.voiceId, ttsText)}
+                    disabled={!ttsText || isGenerating}
+                    className={`speak-button ${isGenerating ? 'generating' : ''}`}
+                  >
+                    {isGenerating ? (
+                      <div className="generate-progress">
+                        <div className="spinner"></div>
+                        <span>Generating audio...</span>
+                      </div>
+                    ) : (
+                      'Speak'
+                    )}
+                  </button>
+                  {audioUrl && (
+                    <div className="audio-player">
+                      <audio controls src={audioUrl}>
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <AuthForm />

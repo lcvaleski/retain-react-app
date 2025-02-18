@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const { uploadToStorage } = require('../controllers/uploadController');
 const { cloneVoice } = require('../controllers/voiceController');
 const debug = require('../utils/debug');
+const { generateSpeech } = require('../controllers/ttsController');
 
 const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
@@ -33,6 +34,35 @@ router.post('/upload', uploadLimiter, upload.single('audio'), async (req, res) =
     debug('Error:', error);
     res.status(500).json({
       message: 'Operation failed',
+      details: error.message
+    });
+  }
+});
+
+router.post('/tts', async (req, res) => {
+  try {
+    const { voiceId, text } = req.body;
+    
+    if (!voiceId || !text) {
+      return res.status(400).json({
+        message: 'Missing required fields',
+        details: 'Both voiceId and text are required'
+      });
+    }
+
+    const audioBuffer = await generateSpeech(voiceId, text);
+    
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': audioBuffer.length
+    });
+    
+    res.send(audioBuffer);
+    
+  } catch (error) {
+    debug('TTS Error:', error);
+    res.status(500).json({
+      message: 'TTS generation failed',
       details: error.message
     });
   }

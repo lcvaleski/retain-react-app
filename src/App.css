@@ -19,11 +19,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 2rem 0;
+  justify-content: flex-start;
+  padding: 4rem 2rem;
   font-size: calc(10px + 2vmin);
   color: black;
   box-sizing: border-box;
+  gap: 3rem;
 }
 
 .App-header p {
@@ -49,50 +50,114 @@
   }
 }
 
-.upload-section {
-  margin-top: 20px;
-}
-
-.upload-section input[type="file"] {
-  display: none;
-}
-
-.upload-button {
-  padding: 0.6rem;
-  background: #4a4a4a;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s;
+.upload-section, .tts-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
   width: 100%;
-  max-width: 320px;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.upload-button, .speak-button {
+  background: #618868;
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  font-size: 1rem;
+  width: auto;
+  min-width: 200px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
 }
 
-.upload-button:hover {
-  background: #333;
+.upload-button:hover, .speak-button:hover {
+  background: #4a6b51;
 }
 
-.upload-button.uploading {
-  background: #666;
-  cursor: not-allowed;
+.upload-button.uploading, .speak-button.generating {
+  background: #4a6b51;
+  cursor: wait;
+}
+
+.upload-progress, .generate-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.tts-input {
+  padding: 1rem;
+  border-radius: 8px;
+  border: 2px solid #ddd;
+  font-size: 1rem;
+  min-height: 80px;
+  width: 100%;
+  max-width: 300px;
+  resize: vertical;
+  background: white;
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+.tts-input:focus {
+  border-color: #618868;
+  outline: none;
+}
+
+.audio-player {
+  margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 300px;
+}
+
+audio {
+  width: 100%;
 }
 
 .error-message {
-  color: #d32f2f;
-  margin-top: 10px;
-  font-size: 0.9em;
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin: 0.5rem 0;
 }
 
 .success-message {
-  color: #2e7d32;  /* Dark green color */
-  margin-top: 10px;
-  font-size: 0.9em;
-  font-weight: bold;
+  color: #27ae60;
+  background: rgba(39, 174, 96, 0.1);
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin: 0.5rem 0;
+}
+
+input[type="file"] {
+  display: none;
 }
 
 .auth-container {
