@@ -114,11 +114,20 @@ function App() {
         body: JSON.stringify({ voiceId, text })
       });
 
+      // Check if response is JSON (error) or audio (success)
+      const contentType = response.headers.get('content-type');
+      
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.details || 'TTS generation failed');
+        if (contentType?.includes('application/json')) {
+          const data = await response.json();
+          throw new Error(data.details || 'TTS generation failed');
+        } else {
+          const text = await response.text();
+          throw new Error(`TTS generation failed: ${text}`);
+        }
       }
 
+      // If we got here, we should have audio data
       const audioBlob = await response.blob();
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
