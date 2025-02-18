@@ -5,6 +5,15 @@ const CARTESIA_TTS_URL = 'https://api.cartesia.ai/tts/bytes';
 const CARTESIA_API_VERSION = '2024-06-10';
 
 async function generateSpeech(voiceId, text) {
+  // Add debug logging for request details
+  debug('TTS Request:', {
+    url: CARTESIA_TTS_URL,
+    voiceId,
+    textLength: text.length,
+    apiVersion: CARTESIA_API_VERSION,
+    hasApiKey: !!process.env.CARTESIA_API_KEY
+  });
+
   const response = await fetch(CARTESIA_TTS_URL, {
     method: 'POST',
     headers: {
@@ -30,8 +39,14 @@ async function generateSpeech(voiceId, text) {
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`TTS generation failed: ${text}`);
+    const errorText = await response.text();
+    debug('TTS Error Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      body: errorText
+    });
+    throw new Error(`TTS generation failed: ${errorText}`);
   }
 
   return response.buffer();
