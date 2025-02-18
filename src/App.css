@@ -258,3 +258,68 @@ input[type="file"] {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
+.recorder-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.record-button {
+  background: #618868;
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  font-size: 1rem;
+  width: auto;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.record-button:hover {
+  background: #4a6b51;
+}
+
+.record-button.recording {
+  background: #c53030;
+}
+
+.record-button.recording:hover {
+  background: #9b2c2c;
+}
+
+.recording-dot {
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.or-divider {
+  margin: 1rem 0;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.or-divider::before,
+.or-divider::after {
+  content: '';
+  height: 1px;
+  background: #ddd;
+  flex: 1;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}

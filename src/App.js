@@ -3,6 +3,7 @@ import './App.css';
 import { useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import AuthForm from './components/AuthForm';
+import AudioRecorder from './components/AudioRecorder';
 
 function App() {
   const [isUploading, setIsUploading] = useState(false);
@@ -27,8 +28,9 @@ function App() {
     }
   };
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
+  const handleFileUpload = async (fileOrEvent) => {
+    // Handle both direct file objects and event.target.files
+    const file = fileOrEvent.target?.files?.[0] || fileOrEvent;
     
     // Add debug logging for file type
     console.log('File details:', {
@@ -161,6 +163,14 @@ function App() {
                     'Upload Voice Recording'
                   )}
                 </label>
+                
+                <div className="or-divider">or</div>
+                
+                <AudioRecorder 
+                  onRecordingComplete={handleFileUpload} 
+                  disabled={isUploading}
+                />
+                
                 {error && <p className="error-message">{error}</p>}
                 {successMessage && <p className="success-message">{successMessage}</p>}
               </div>
