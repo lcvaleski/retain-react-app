@@ -25,6 +25,14 @@ function App() {
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
+    
+    // Add debug logging for file type
+    console.log('File details:', {
+      name: file?.name,
+      type: file?.type,
+      size: file?.size
+    });
+
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
 
     try {
@@ -34,7 +42,7 @@ function App() {
       // Validate file
       if (!file) return;
       if (!file.type.startsWith('audio/')) {
-        throw new Error('Please select an audio file');
+        throw new Error(`Unsupported file type: ${file.type}. Please select an audio file`);
       }
       if (file.size > MAX_FILE_SIZE) {
         throw new Error('File size must be less than 10MB');
