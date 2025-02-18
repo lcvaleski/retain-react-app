@@ -170,3 +170,26 @@
   justify-content: center;
   width: 100%;
 }
+
+.response-data {
+  margin-top: 20px;
+  text-align: left;
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.response-data h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  color: #333;
+}
+
+.response-data pre {
+  margin: 0;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

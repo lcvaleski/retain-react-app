@@ -3,11 +3,13 @@ import './App.css';
 import { useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import AuthForm from './components/AuthForm';
+import { auth } from './firebase';
 
 function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [responseData, setResponseData] = useState(null);
   const { currentUser, logout } = useAuth();
   
   console.log('Current user:', currentUser);
@@ -63,7 +65,6 @@ function App() {
         },
       });
 
-      console.log('Response status:', response.status);
       const responseText = await response.text();
       console.log('Response text:', responseText);
 
@@ -75,14 +76,16 @@ function App() {
           text: responseText,
           error: e.message
         });
-        throw new Error(`Failed to parse response: ${responseText.substring(0, 100)}...`);
+        data = { error: `Failed to parse response: ${responseText.substring(0, 100)}...` };
       }
+
+      // Store the full response data regardless of success/failure
+      setResponseData(data);
 
       if (!response.ok) {
         throw new Error(data.details || data.message || 'Upload failed');
       }
 
-      console.log('Upload successful:', data);
       setSuccessMessage('Audio uploaded successfully!');
       
     } catch (error) {
@@ -124,6 +127,14 @@ function App() {
                 </label>
                 {error && <p className="error-message">{error}</p>}
                 {successMessage && <p className="success-message">{successMessage}</p>}
+                
+                {/* Add response data display */}
+                {responseData && (
+                  <div className="response-data">
+                    <h3>Response Data:</h3>
+                    <pre>{JSON.stringify(responseData, null, 2)}</pre>
+                  </div>
+                )}
               </div>
             </>
           ) : (

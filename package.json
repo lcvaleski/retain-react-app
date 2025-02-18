@@ -24,8 +24,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server": "node server/dev-server.js",
-    "dev": "concurrently \"npm run server\" \"npm run start\"",
+    "server": "nodemon --no-deprecation server/dev-server.js",
+    "dev": "concurrently \"npm run server\" \"BROWSER=none npm start\"",
     "vercel-build": "npm run build"
   },
   "eslintConfig": {
@@ -48,6 +48,7 @@
   },
   "proxy": "http://localhost:3001",
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9"
   }
 }
