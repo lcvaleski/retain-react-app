@@ -3,7 +3,6 @@ import './App.css';
 import { useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import AuthForm from './components/AuthForm';
-import { auth } from './firebase';
 
 function App() {
   const [isUploading, setIsUploading] = useState(false);
