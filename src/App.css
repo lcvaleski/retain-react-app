@@ -323,3 +323,32 @@ input[type="file"] {
   50% { opacity: 0.4; }
   100% { opacity: 1; }
 }
+
+.family-slideshow {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 0;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 100px;
+  width: 100px;
+}
+
+.family-image {
+  width: 100px;
+  height: 100px;
+  transition: opacity 0.5s ease-in-out;
+  object-fit: contain;
+  position: absolute;
+  opacity: 0;
+}
+
+.family-image.visible {
+  opacity: 1;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; }
+  20%, 80% { opacity: 1; }
+}

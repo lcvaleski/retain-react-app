@@ -1,9 +1,10 @@
 import logo from './logo.svg';
 import './App.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import AuthForm from './components/AuthForm';
 import AudioRecorder from './components/AudioRecorder';
+import { Family1, Family2, Family3 } from './assets';
 
 function App() {
   const [isUploading, setIsUploading] = useState(false);
@@ -14,8 +15,18 @@ function App() {
   const [ttsText, setTtsText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const images = [Family1, Family2, Family3];
   
   console.log('Current user:', currentUser);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((current) => (current + 1) % images.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [images.length]);
 
   const handleLogout = async () => {
     try {
@@ -149,6 +160,16 @@ function App() {
             We save photos, letters, and videos of our loved ones.<br />
             Why not their voices?
           </p>
+          <div className="family-slideshow">
+            {images.map((image, index) => (
+              <img
+                key={index}
+                src={image}
+                className={`family-image ${index === currentImageIndex ? 'visible' : ''}`}
+                alt={`Family illustration ${index + 1}`}
+              />
+            ))}
+          </div>
           {currentUser ? (
             <>
               <div className="upload-section">
