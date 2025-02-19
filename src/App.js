@@ -159,6 +159,7 @@ function App() {
                   id="audio-upload"
                   disabled={isUploading}
                 />
+                <p>Clone your voice below. Introduce yourself for 10 seconds.</p>
                 <label 
                   htmlFor="audio-upload" 
                   className={`upload-button ${isUploading ? 'uploading' : ''}`}
@@ -172,9 +173,6 @@ function App() {
                     'Upload Voice Recording'
                   )}
                 </label>
-                
-                <div className="or-divider">or</div>
-                
                 <AudioRecorder 
                   onRecordingComplete={handleFileUpload} 
                   disabled={isUploading}
