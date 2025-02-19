@@ -21,7 +21,7 @@ const uploadLimiter = rateLimit({
 
 router.post('/upload', uploadLimiter, upload.single('audio'), async (req, res) => {
   try {
-    const { blob, file } = await uploadToStorage(req, res);
+    const { file } = await uploadToStorage(req, res);
     const cloneResult = await cloneVoice(file);
     
     res.status(200).json({
