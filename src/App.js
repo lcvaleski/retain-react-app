@@ -114,7 +114,6 @@ function App() {
   const handleLogout = async () => {
     try {
       await logout();
-      setSuccessMessage('Logged out successfully!');
       setError(null);
     } catch (error) {
       console.error('Logout error:', error);
