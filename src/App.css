@@ -39,7 +39,7 @@ body {
   font-size: calc(10px + 2vmin);
   color: black;
   box-sizing: border-box;
-  gap: 3rem;
+  gap: 2rem;
   width: 100%;
 }
 
@@ -71,6 +71,7 @@ body {
     padding: 2rem 1rem;
     width: 100vw;
     margin: 0;
+    gap: 1.5rem;
   }
   
   .main-content {
@@ -82,6 +83,10 @@ body {
   .App-header p {
     padding: 0;
     width: 100%;
+  }
+
+  .family-slideshow {
+    margin: 0.5rem 0;
   }
 }
 
@@ -433,30 +438,48 @@ input[type="file"] {
 }
 
 .family-slideshow {
-  display: flex;
-  gap: 2rem;
-  margin: 2rem 0;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  margin: 1rem auto;
   position: relative;
-  height: 100px;
-  width: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .family-image {
-  width: 100px;
-  height: 100px;
-  transition: opacity 0.5s ease-in-out;
+  width: 100%;
+  max-width: 150px;
+  height: auto;
   object-fit: contain;
-  position: absolute;
   opacity: 0;
+  position: absolute;
+  transition: opacity 0.5s ease-in-out;
 }
 
 .family-image.visible {
   opacity: 1;
+  position: relative;
 }
 
 @keyframes fadeInOut {
   0%, 100% { opacity: 0; }
   20%, 80% { opacity: 1; }
+}
+
+@media screen and (max-width: 768px) {
+  .family-slideshow {
+    max-width: 130px;
+  }
+  
+  .family-image {
+    max-width: 130px;
+  }
+}
+
+.upload-section p {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 1rem;
 }
