@@ -8,30 +8,42 @@ import { Family1, Family2, Family3 } from './assets';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
+// Core state management for voice cloning and TTS functionality
 function App() {
+  // Upload and response states
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [responseData, setResponseData] = useState(null);
+  const [responseData, setResponseData] = useState(null);  // Stores API response including voiceId
+  
+  // Authentication state from Firebase
   const { currentUser, logout, signInAnonymously } = useAuth();
-  const [ttsText, setTtsText] = useState('');
+  
+  // Text-to-Speech states
+  const [ttsText, setTtsText] = useState('');  // Text input for TTS
   const [isGenerating, setIsGenerating] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);  // URL for generated audio playback
+  
+  // UI states
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = [Family1, Family2, Family3];
-  const [pendingVoiceId, setPendingVoiceId] = useState(null);
-  const [pendingFile, setPendingFile] = useState(null);
   
+  // Voice cloning states
+  const [pendingVoiceId, setPendingVoiceId] = useState(null);  // Stores voiceId before account creation
+  const [pendingFile, setPendingFile] = useState(null);  // Stores audio file before account creation
+
   console.log('Current user:', currentUser);
 
+  // Main function to handle voice recording/file upload
   const handleFileUpload = useCallback(async (fileOrEvent) => {
     const file = fileOrEvent.target?.files?.[0] || fileOrEvent;
     
     try {
+      // Reset states
       setError(null);
       setSuccessMessage(null);
       
-      // Validate file
+      // File validation
       if (!file) return;
       if (!file.type.startsWith('audio/')) {
         throw new Error(`Unsupported file type: ${file.type}. Please select an audio file`);
@@ -40,46 +52,39 @@ function App() {
         throw new Error('File size must be less than 10MB');
       }
 
-      // Create anonymous account if user isn't logged in
+      // Anonymous user flow - create temporary account
       if (!currentUser) {
         await signInAnonymously();
-        // Save the file for later upload
-        setPendingFile(file);
+        setPendingFile(file);  // Save file for later upload
         return;
       }
 
       setIsUploading(true);
       
-      // Create form data
+      // Upload file to server
       const formData = new FormData();
       formData.append('audio', file);
 
-      // Upload to backend
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
-        headers: {
-          'Accept': 'application/json',
-        },
+        headers: { 'Accept': 'application/json' },
       });
 
+      // Parse and handle response
       const responseText = await response.text();
-      console.log('Response text:', responseText);
-
       let data;
       try {
         data = JSON.parse(responseText);
-        setResponseData(data); // Store the response data
+        setResponseData(data);
         
+        // Store voice ID and show success message
         if (data.voiceId) {
           setPendingVoiceId(data.voiceId);
           setSuccessMessage('Voice cloned successfully!');
         }
       } catch (e) {
-        console.error('Parse error:', {
-          text: responseText,
-          error: e.message
-        });
+        console.error('Parse error:', { text: responseText, error: e.message });
         throw new Error(`Failed to parse response: ${responseText.substring(0, 100)}...`);
       }
 
@@ -121,30 +126,22 @@ function App() {
     }
   };
 
+  // Text-to-Speech generation function
   const generateSpeech = useCallback(async (voiceId, text) => {
-    console.log('generateSpeech called with:', { voiceId, text });
     try {
       setIsGenerating(true);
       setError(null);
       
-      console.log('Making fetch request to /api/tts');
+      // Make TTS API request
       const response = await fetch('/api/tts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ voiceId, text })
       });
-      console.log('Received response:', { 
-        ok: response.ok, 
-        status: response.status,
-        contentType: response.headers.get('content-type')
-      });
 
-      // Check if response is JSON (error) or audio (success)
-      const contentType = response.headers.get('content-type');
-      
+      // Handle errors
       if (!response.ok) {
+        const contentType = response.headers.get('content-type');
         if (contentType?.includes('application/json')) {
           const data = await response.json();
           throw new Error(data.details || 'TTS generation failed');
@@ -154,12 +151,9 @@ function App() {
         }
       }
 
-      // If we got here, we should have audio data
-      console.log('Getting blob from response');
+      // Create audio URL for playback
       const audioBlob = await response.blob();
-      console.log('Creating URL from blob');
       const url = URL.createObjectURL(audioBlob);
-      console.log('Setting audio URL:', url);
       setAudioUrl(url);
       
     } catch (error) {
