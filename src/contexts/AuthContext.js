@@ -23,16 +23,16 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [auth, setAuth] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let unsubscribe;
+    let firebaseAuth;
     
     const initialize = async () => {
       try {
-        const { auth: firebaseAuth } = await initializeFirebase();
-        setAuth(firebaseAuth);
+        const { auth: authInstance } = await initializeFirebase();
+        firebaseAuth = authInstance;
         
         unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
           setCurrentUser(user);

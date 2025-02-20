@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import AuthForm from './components/AuthForm';
 import AudioRecorder from './components/AudioRecorder';
@@ -24,35 +24,7 @@ function App() {
   
   console.log('Current user:', currentUser);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((current) => (current + 1) % images.length);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [images.length]);
-
-  useEffect(() => {
-    // Check if we have a pending file and user just created account
-    if (pendingFile && currentUser && !currentUser.isAnonymous) {
-      handleFileUpload(pendingFile);
-      setPendingFile(null); // Clear the pending file
-    }
-  }, [currentUser?.isAnonymous]); // Trigger when user changes from anonymous to authenticated
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setSuccessMessage('Logged out successfully!');
-      setError(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-      setError(error.message);
-    }
-  };
-
-  const handleFileUpload = async (fileOrEvent) => {
-    // Handle both direct file objects and event.target.files
+  const handleFileUpload = useCallback(async (fileOrEvent) => {
     const file = fileOrEvent.target?.files?.[0] || fileOrEvent;
     
     try {
@@ -121,19 +93,53 @@ function App() {
     } finally {
       setIsUploading(false);
     }
+  }, [currentUser, signInAnonymously]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((current) => (current + 1) % images.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [images.length]);
+
+  useEffect(() => {
+    // Check if we have a pending file and user just created account
+    if (pendingFile && currentUser && !currentUser.isAnonymous) {
+      handleFileUpload(pendingFile);
+      setPendingFile(null);
+    }
+  }, [currentUser, pendingFile, handleFileUpload]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setSuccessMessage('Logged out successfully!');
+      setError(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      setError(error.message);
+    }
   };
 
-  const generateSpeech = async (voiceId, text) => {
+  const generateSpeech = useCallback(async (voiceId, text) => {
+    console.log('generateSpeech called with:', { voiceId, text });
     try {
       setIsGenerating(true);
       setError(null);
       
+      console.log('Making fetch request to /api/tts');
       const response = await fetch('/api/tts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ voiceId, text })
+      });
+      console.log('Received response:', { 
+        ok: response.ok, 
+        status: response.status,
+        contentType: response.headers.get('content-type')
       });
 
       // Check if response is JSON (error) or audio (success)
@@ -150,8 +156,11 @@ function App() {
       }
 
       // If we got here, we should have audio data
+      console.log('Getting blob from response');
       const audioBlob = await response.blob();
+      console.log('Creating URL from blob');
       const url = URL.createObjectURL(audioBlob);
+      console.log('Setting audio URL:', url);
       setAudioUrl(url);
       
     } catch (error) {
@@ -160,7 +169,7 @@ function App() {
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, []);
 
   return (
     <div className="App">
@@ -229,11 +238,26 @@ function App() {
               />
               <button
                 onClick={() => {
+                  console.log('Button clicked');
+                  console.log('Current state:', { 
+                    pendingVoiceId, 
+                    responseData, 
+                    ttsText, 
+                    isGenerating 
+                  });
+                  
                   const voiceId = pendingVoiceId || (responseData && responseData.voiceId);
                   if (!voiceId) {
+                    console.log('No voice ID found');
                     setError('No voice ID found. Please record your voice first.');
                     return;
                   }
+                  if (!ttsText.trim()) {
+                    console.log('No text entered');
+                    setError('Please enter some text to speak');
+                    return;
+                  }
+                  console.log('Calling generateSpeech with:', { voiceId, ttsText });
                   generateSpeech(voiceId, ttsText);
                 }}
                 disabled={!ttsText || isGenerating || (!pendingVoiceId && !responseData?.voiceId)}
