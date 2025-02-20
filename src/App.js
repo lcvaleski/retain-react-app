@@ -6,17 +6,21 @@ import AuthForm from './components/AuthForm';
 import AudioRecorder from './components/AudioRecorder';
 import { Family1, Family2, Family3 } from './assets';
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+
 function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [responseData, setResponseData] = useState(null);
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, signInAnonymously } = useAuth();
   const [ttsText, setTtsText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = [Family1, Family2, Family3];
+  const [pendingVoiceId, setPendingVoiceId] = useState(null);
+  const [pendingFile, setPendingFile] = useState(null);
   
   console.log('Current user:', currentUser);
 
@@ -27,6 +31,14 @@ function App() {
 
     return () => clearInterval(interval);
   }, [images.length]);
+
+  useEffect(() => {
+    // Check if we have a pending file and user just created account
+    if (pendingFile && currentUser && !currentUser.isAnonymous) {
+      handleFileUpload(pendingFile);
+      setPendingFile(null); // Clear the pending file
+    }
+  }, [currentUser?.isAnonymous]); // Trigger when user changes from anonymous to authenticated
 
   const handleLogout = async () => {
     try {
@@ -43,15 +55,6 @@ function App() {
     // Handle both direct file objects and event.target.files
     const file = fileOrEvent.target?.files?.[0] || fileOrEvent;
     
-    // Add debug logging for file type
-    console.log('File details:', {
-      name: file?.name,
-      type: file?.type,
-      size: file?.size
-    });
-
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
-
     try {
       setError(null);
       setSuccessMessage(null);
@@ -65,8 +68,16 @@ function App() {
         throw new Error('File size must be less than 10MB');
       }
 
-      setIsUploading(true);
+      // Create anonymous account if user isn't logged in
+      if (!currentUser) {
+        await signInAnonymously();
+        // Save the file for later upload
+        setPendingFile(file);
+        return;
+      }
 
+      setIsUploading(true);
+      
       // Create form data
       const formData = new FormData();
       formData.append('audio', file);
@@ -86,26 +97,26 @@ function App() {
       let data;
       try {
         data = JSON.parse(responseText);
+        setResponseData(data); // Store the response data
+        
+        if (data.voiceId) {
+          setPendingVoiceId(data.voiceId);
+          setSuccessMessage('Voice cloned successfully!');
+        }
       } catch (e) {
         console.error('Parse error:', {
           text: responseText,
           error: e.message
         });
-        data = { error: `Failed to parse response: ${responseText.substring(0, 100)}...` };
+        throw new Error(`Failed to parse response: ${responseText.substring(0, 100)}...`);
       }
-
-      // Store the full response data regardless of success/failure
-      setResponseData(data);
 
       if (!response.ok) {
         throw new Error(data.details || data.message || 'Upload failed');
       }
       
     } catch (error) {
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack
-      });
+      console.error('Error details:', error);
       setError(error.message);
     } finally {
       setIsUploading(false);
@@ -170,80 +181,90 @@ function App() {
               />
             ))}
           </div>
-          {currentUser ? (
-            <>
-              <div className="upload-section">
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleFileUpload}
-                  id="audio-upload"
-                  disabled={isUploading}
-                />
-                <p>Clone your voice below. Introduce yourself for 10 seconds.</p>
-                <label 
-                  htmlFor="audio-upload" 
-                  className={`upload-button ${isUploading ? 'uploading' : ''}`}
-                >
-                  {isUploading ? (
-                    <div className="upload-progress">
-                      <div className="spinner"></div>
-                      <span>Processing voice...</span>
-                    </div>
-                  ) : (
-                    'Upload Voice Recording'
-                  )}
-                </label>
-                <AudioRecorder 
-                  onRecordingComplete={handleFileUpload} 
-                  disabled={isUploading}
-                />
-                
-                {error && <p className="error-message">{error}</p>}
-                {successMessage && <p className="success-message">{successMessage}</p>}
-              </div>
-              
-              {responseData?.voiceId && (
-                <div className="tts-container">
-                  <textarea
-                    value={ttsText}
-                    onChange={(e) => setTtsText(e.target.value)}
-                    placeholder="What would you like your voice to say?"
-                    disabled={isGenerating}
-                    className="tts-input"
-                  />
-                  <button
-                    onClick={() => generateSpeech(responseData.voiceId, ttsText)}
-                    disabled={!ttsText || isGenerating}
-                    className={`speak-button ${isGenerating ? 'generating' : ''}`}
-                  >
-                    {isGenerating ? (
-                      <div className="generate-progress">
-                        <div className="spinner"></div>
-                        <span>Generating audio...</span>
-                      </div>
-                    ) : (
-                      'Speak'
-                    )}
-                  </button>
-                  {audioUrl && (
-                    <div className="audio-player">
-                      <audio controls src={audioUrl}>
-                        Your browser does not support the audio element.
-                      </audio>
-                    </div>
-                  )}
+          {(!currentUser || currentUser.isAnonymous) && (
+            <div className="upload-section">
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={handleFileUpload}
+                id="audio-upload"
+                disabled={isUploading}
+              />
+              <p>Clone your voice below. Introduce yourself for 10 seconds.</p>
+              <label 
+                htmlFor="audio-upload" 
+                className={`upload-button ${isUploading ? 'uploading' : ''}`}
+              >
+                {isUploading ? (
+                  <div className="upload-progress">
+                    <div className="spinner"></div>
+                    <span>Processing voice...</span>
+                  </div>
+                ) : (
+                  'Upload Voice Recording'
+                )}
+              </label>
+              <AudioRecorder 
+                onRecordingComplete={handleFileUpload} 
+                disabled={isUploading}
+              />
+            </div>
+          )}
+
+          {currentUser?.isAnonymous && (
+            <div className="auth-prompt">
+              <p>Great! To use your cloned voice, please create an account or sign in.</p>
+              <AuthForm />
+            </div>
+          )}
+
+          {currentUser && !currentUser.isAnonymous && (
+            <div className="tts-container">
+              <textarea
+                value={ttsText}
+                onChange={(e) => setTtsText(e.target.value)}
+                placeholder="What would you like your voice to say?"
+                disabled={isGenerating}
+                className="tts-input"
+              />
+              <button
+                onClick={() => {
+                  const voiceId = pendingVoiceId || (responseData && responseData.voiceId);
+                  if (!voiceId) {
+                    setError('No voice ID found. Please record your voice first.');
+                    return;
+                  }
+                  generateSpeech(voiceId, ttsText);
+                }}
+                disabled={!ttsText || isGenerating || (!pendingVoiceId && !responseData?.voiceId)}
+                className={`speak-button ${isGenerating ? 'generating' : ''}`}
+              >
+                {isGenerating ? (
+                  <div className="generate-progress">
+                    <div className="spinner"></div>
+                    <span>Generating audio...</span>
+                  </div>
+                ) : (
+                  'Speak'
+                )}
+              </button>
+              {audioUrl && (
+                <div className="audio-player">
+                  <audio controls src={audioUrl}>
+                    Your browser does not support the audio element.
+                  </audio>
                 </div>
               )}
-            </>
-          ) : (
-            <AuthForm />
+            </div>
           )}
+          
+          {error && <p className="error-message">{error}</p>}
+          {successMessage && <p className="success-message">{successMessage}</p>}
         </div>
         
-        {currentUser && (
+        {currentUser && !currentUser.isAnonymous && (
           <div className="user-section">
-            <p>Signed in as {currentUser.email}</p>
+            <p>Signed in as {currentUser.email || 'Anonymous User'}</p>
             <button onClick={handleLogout} className="logout-button">
               Logout
             </button>

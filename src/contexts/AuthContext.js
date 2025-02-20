@@ -7,8 +7,12 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  signInAnonymously as firebaseSignInAnonymously,
+  linkWithCredential,
+  EmailAuthProvider
 } from 'firebase/auth';
+import { auth } from '../firebase';
 
 const AuthContext = createContext();
 
@@ -48,24 +52,48 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  async function signInAnonymously() {
+    try {
+      const result = await firebaseSignInAnonymously(auth);
+      return result.user;
+    } catch (error) {
+      console.error('Anonymous sign-in failed:', error);
+      throw error;
+    }
+  }
+
+  async function linkAnonymousWithEmail(email, password) {
+    if (!currentUser?.isAnonymous) {
+      throw new Error('User is not anonymous');
+    }
+
+    const credential = EmailAuthProvider.credential(email, password);
+    
+    try {
+      const result = await linkWithCredential(currentUser, credential);
+      return result.user;
+    } catch (error) {
+      console.error('Account linking failed:', error);
+      throw error;
+    }
+  }
+
   async function signup(email, password) {
-    if (!auth) {
-      throw new Error('Authentication not initialized');
+    if (currentUser?.isAnonymous) {
+      return linkAnonymousWithEmail(email, password);
     }
     return createUserWithEmailAndPassword(auth, email, password);
   }
 
   async function login(email, password) {
-    if (!auth) {
-      throw new Error('Authentication not initialized');
+    if (currentUser?.isAnonymous) {
+      // If user is anonymous, we should link instead of signing in
+      return linkAnonymousWithEmail(email, password);
     }
     return signInWithEmailAndPassword(auth, email, password);
   }
 
   async function logout() {
-    if (!auth) {
-      throw new Error('Authentication not initialized');
-    }
     return signOut(auth);
   }
 
@@ -91,6 +119,8 @@ export function AuthProvider({ children }) {
     logout,
     loginWithGoogle,
     resetPassword,
+    signInAnonymously,
+    linkAnonymousWithEmail,
     error,
     loading
   };

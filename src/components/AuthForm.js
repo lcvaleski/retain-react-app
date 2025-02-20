@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import './AuthForm.css';
 
+const validatePassword = (password) => {
+  if (password.length < 6) {
+    return 'Password must be at least 6 characters';
+  }
+  return null;
+};
+
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -9,23 +16,7 @@ export default function AuthForm() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const { login, signup, loginWithGoogle, resetPassword } = useAuth();
-
-  const validatePassword = (password) => {
-    const hasNumber = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
-    if (!hasNumber) {
-      return 'Password must contain at least one number';
-    }
-    if (!hasSpecialChar) {
-      return 'Password must contain at least one special character';
-    }
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters long';
-    }
-    return null;
-  };
+  const { login, signup, loginWithGoogle, resetPassword, currentUser } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,6 +65,9 @@ export default function AuthForm() {
           break;
         case 'auth/too-many-requests':
           setError('Too many attempts. Please try again later');
+          break;
+        case 'auth/credential-already-in-use':
+          setError('This email is already associated with another account');
           break;
         default:
           setError('An error occurred. Please try again');
@@ -127,9 +121,12 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="auth-form-container">
-      <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
-      {error && <div className="auth-error">{error}</div>}
+    <div className="auth-container">
+      <h2>{currentUser?.isAnonymous ? 'Create Account to Save Voice' : (isLogin ? 'Login' : 'Sign Up')}</h2>
+      {currentUser?.isAnonymous && (
+        <p>Create an account to save your voice clone and use it anytime.</p>
+      )}
+      {error && <div className="error-message">{error}</div>}
       {message && <div className="auth-message">{message}</div>}
       
       <form onSubmit={handleSubmit}>
@@ -157,16 +154,14 @@ export default function AuthForm() {
           />
         )}
         <button type="submit">
-          {isLogin ? 'Login' : 'Sign Up'}
+          {currentUser?.isAnonymous 
+            ? 'Save Voice Clone' 
+            : (isLogin ? 'Login' : 'Sign Up')}
         </button>
-        {isLogin && (
-          <button 
-            type="button"
-            className="forgot-password-button"
-            onClick={handleForgotPassword}
-          >
-            Forgot Password?
-          </button>
+        {!currentUser?.isAnonymous && (
+          <p onClick={() => setIsLogin(!isLogin)} style={{ cursor: 'pointer', color: '#618868' }}>
+            {isLogin ? "Don't have an account? Sign up" : "Already have an account? Login"}
+          </p>
         )}
       </form>
 
@@ -182,15 +177,15 @@ export default function AuthForm() {
         Continue with Google
       </button>
 
-      <p className="auth-switch">
-        {isLogin ? "Don't have an account? " : "Already have an account? "}
+      {isLogin && (
         <button 
-          className="link-button"
-          onClick={() => setIsLogin(!isLogin)}
+          type="button"
+          className="forgot-password-button"
+          onClick={handleForgotPassword}
         >
-          {isLogin ? 'Sign Up' : 'Login'}
+          Forgot Password?
         </button>
-      </p>
+      )}
     </div>
   );
 } 
