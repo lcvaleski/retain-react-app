@@ -5,6 +5,8 @@ import { useAuth } from './contexts/AuthContext';
 import AuthForm from './components/AuthForm';
 import AudioRecorder from './components/AudioRecorder';
 import { Family1, Family2, Family3 } from './assets';
+import VoiceNameModal from './components/VoiceNameModal';
+import SavedVoices from './components/SavedVoices';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
@@ -31,6 +33,9 @@ function App() {
   // Voice cloning states
   const [pendingVoiceId, setPendingVoiceId] = useState(null);  // Stores voiceId before account creation
   const [pendingFile, setPendingFile] = useState(null);  // Stores audio file before account creation
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [savedVoices, setSavedVoices] = useState([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState(null);
 
   console.log('Current user:', currentUser);
 
@@ -82,6 +87,9 @@ function App() {
         if (data.voiceId) {
           setPendingVoiceId(data.voiceId);
           setSuccessMessage('Voice cloned successfully!');
+          if (!currentUser.isAnonymous) {
+            setShowNameModal(true);
+          }
         }
       } catch (e) {
         console.error('Parse error:', { text: responseText, error: e.message });
@@ -164,6 +172,24 @@ function App() {
     }
   }, []);
 
+  const handleVoiceSelect = (voiceId) => {
+    setSelectedVoiceId(voiceId);
+    setPendingVoiceId(voiceId);  // Update the pending voice ID for TTS
+  };
+
+  const handleSaveVoice = async (voiceId, voiceName) => {
+    try {
+      // Here you would typically save to your backend/database
+      const newVoice = { id: voiceId, name: voiceName };
+      setSavedVoices(prev => [...prev, newVoice]);
+      setSelectedVoiceId(voiceId);  // Select the newly saved voice
+      setShowNameModal(false);
+      setSuccessMessage('Voice saved successfully!');
+    } catch (error) {
+      setError('Failed to save voice: ' + error.message);
+    }
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -222,6 +248,11 @@ function App() {
 
           {currentUser && !currentUser.isAnonymous && (
             <div className="tts-container">
+              <SavedVoices 
+                voices={savedVoices} 
+                onSelect={handleVoiceSelect}
+                selectedVoiceId={selectedVoiceId}
+              />
               <textarea
                 value={ttsText}
                 onChange={(e) => setTtsText(e.target.value)}
@@ -288,6 +319,14 @@ function App() {
           </div>
         )}
       </header>
+      {showNameModal && (
+        <VoiceNameModal
+          isOpen={showNameModal}
+          onClose={() => setShowNameModal(false)}
+          onSave={handleSaveVoice}
+          voiceId={pendingVoiceId || (responseData && responseData.voiceId)}
+        />
+      )}
     </div>
   );
 }
