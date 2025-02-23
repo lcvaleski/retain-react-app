@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const { uploadToStorage } = require('../controllers/uploadController');
-const { cloneVoice } = require('../controllers/voiceController');
+const { cloneVoice, saveVoice, getVoices } = require('../controllers/voiceController');
 const debug = require('../utils/debug');
 const { generateSpeech } = require('../controllers/ttsController');
 
@@ -76,6 +76,31 @@ router.post('/tts', async (req, res) => {
       message: 'TTS generation failed',
       details: error.message
     });
+  }
+});
+
+router.post('/voices', async (req, res) => {
+  try {
+    const { userId, voiceId, name } = req.body;
+    if (!userId || !voiceId || !name) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+    
+    const voice = await saveVoice(userId, voiceId, name);
+    res.json(voice);
+  } catch (error) {
+    console.error('Save voice error:', error);
+    res.status(500).json({ message: 'Failed to save voice' });
+  }
+});
+
+router.get('/voices/:userId', async (req, res) => {
+  try {
+    const voices = await getVoices(req.params.userId);
+    res.json(voices);
+  } catch (error) {
+    console.error('Get voices error:', error);
+    res.status(500).json({ message: 'Failed to fetch voices' });
   }
 });
 

@@ -1,12 +1,14 @@
 import logo from './logo.svg';
 import './App.css';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import AuthForm from './components/AuthForm';
 import AudioRecorder from './components/AudioRecorder';
 import { Family1, Family2, Family3 } from './assets';
 import VoiceNameModal from './components/VoiceNameModal';
 import SavedVoices from './components/SavedVoices';
+import { db } from './firebase';
+import { collection, addDoc, query, where, getDocs, orderBy } from 'firebase/firestore';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
@@ -19,7 +21,7 @@ function App() {
   const [responseData, setResponseData] = useState(null);  // Stores API response including voiceId
   
   // Authentication state from Firebase
-  const { currentUser, logout, signInAnonymously } = useAuth();
+  const { currentUser, logout, signInAnonymously, loginWithGoogle } = useAuth();
   
   // Text-to-Speech states
   const [ttsText, setTtsText] = useState('');  // Text input for TTS
@@ -37,7 +39,19 @@ function App() {
   const [savedVoices, setSavedVoices] = useState([]);
   const [selectedVoiceId, setSelectedVoiceId] = useState(null);
 
-  console.log('Current user:', currentUser);
+  const prevUserIdRef = useRef(null);
+
+  useEffect(() => {
+    const currentUserId = currentUser?.uid;
+    if (currentUserId !== prevUserIdRef.current) {
+      console.log('User changed:', {
+        uid: currentUser?.uid,
+        email: currentUser?.email,
+        isAnonymous: currentUser?.isAnonymous
+      });
+      prevUserIdRef.current = currentUserId;
+    }
+  }, [currentUser]);
 
   // Main function to handle voice recording/file upload
   const handleFileUpload = useCallback(async (fileOrEvent) => {
@@ -136,36 +150,43 @@ function App() {
 
   // Text-to-Speech generation function
   const generateSpeech = useCallback(async (voiceId, text) => {
+    console.log('generateSpeech called with:', { voiceId, text });
     try {
       setIsGenerating(true);
       setError(null);
       
-      // Make TTS API request
+      const requestBody = { voiceId, text };
+      console.log('Making TTS request to /api/tts:', requestBody);
+      
       const response = await fetch('/api/tts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceId, text })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
       });
 
-      // Handle errors
+      console.log('TTS response received:', { 
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText 
+      });
+
       if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType?.includes('application/json')) {
-          const data = await response.json();
-          throw new Error(data.details || 'TTS generation failed');
-        } else {
-          const text = await response.text();
-          throw new Error(`TTS generation failed: ${text}`);
-        }
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to generate speech: ${response.status} ${response.statusText}`);
       }
 
-      // Create audio URL for playback
       const audioBlob = await response.blob();
+      console.log('Audio blob received:', { 
+        size: audioBlob.size,
+        type: audioBlob.type 
+      });
+      
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
-      
     } catch (error) {
-      console.error('TTS Error:', error);
+      console.error('generateSpeech error:', error);
       setError(error.message);
     } finally {
       setIsGenerating(false);
@@ -173,22 +194,63 @@ function App() {
   }, []);
 
   const handleVoiceSelect = (voiceId) => {
+    console.log('Voice selected:', { voiceId, currentVoiceId: selectedVoiceId });
     setSelectedVoiceId(voiceId);
     setPendingVoiceId(voiceId);  // Update the pending voice ID for TTS
   };
 
   const handleSaveVoice = async (voiceId, voiceName) => {
     try {
-      // Here you would typically save to your backend/database
-      const newVoice = { id: voiceId, name: voiceName };
+      const voiceRef = await addDoc(collection(db, 'voices'), {
+        userId: currentUser.uid,
+        voiceId: voiceId,
+        name: voiceName,
+        createdAt: new Date()
+      });
+
+      const newVoice = {
+        id: voiceRef.id,
+        voiceId,
+        name: voiceName
+      };
+
       setSavedVoices(prev => [...prev, newVoice]);
-      setSelectedVoiceId(voiceId);  // Select the newly saved voice
+      setSelectedVoiceId(voiceId);
       setShowNameModal(false);
       setSuccessMessage('Voice saved successfully!');
     } catch (error) {
+      console.error('Save voice error:', error);
       setError('Failed to save voice: ' + error.message);
     }
   };
+
+  // Add this effect to load saved voices when user logs in
+  useEffect(() => {
+    const loadSavedVoices = async () => {
+      if (currentUser && !currentUser.isAnonymous) {
+        try {
+          const voicesQuery = query(
+            collection(db, 'voices'),
+            where('userId', '==', currentUser.uid),
+            orderBy('createdAt', 'desc')
+          );
+
+          const querySnapshot = await getDocs(voicesQuery);
+          const voices = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          
+          setSavedVoices(voices);
+        } catch (error) {
+          console.error('Error loading voices:', error);
+          setError('Failed to load saved voices');
+        }
+      }
+    };
+
+    loadSavedVoices();
+  }, [currentUser]);
 
   return (
     <div className="App">
@@ -262,18 +324,20 @@ function App() {
               />
               <button
                 onClick={() => {
-                  console.log('Button clicked');
-                  console.log('Current state:', { 
-                    pendingVoiceId, 
-                    responseData, 
-                    ttsText, 
-                    isGenerating 
+                  console.log('Speak button clicked');
+                  console.log('Button state:', {
+                    ttsText,
+                    isGenerating,
+                    pendingVoiceId,
+                    responseData,
+                    selectedVoiceId,
+                    disabled: !ttsText || isGenerating || (!pendingVoiceId && !responseData?.voiceId)
                   });
                   
-                  const voiceId = pendingVoiceId || (responseData && responseData.voiceId);
+                  const voiceId = selectedVoiceId || pendingVoiceId || (responseData && responseData.voiceId);
                   if (!voiceId) {
-                    console.log('No voice ID found');
-                    setError('No voice ID found. Please record your voice first.');
+                    console.log('No voice ID available:', { selectedVoiceId, pendingVoiceId, responseVoiceId: responseData?.voiceId });
+                    setError('Please select a voice first');
                     return;
                   }
                   if (!ttsText.trim()) {
@@ -281,7 +345,7 @@ function App() {
                     setError('Please enter some text to speak');
                     return;
                   }
-                  console.log('Calling generateSpeech with:', { voiceId, ttsText });
+                  console.log('Proceeding with generateSpeech:', { voiceId, ttsText });
                   generateSpeech(voiceId, ttsText);
                 }}
                 disabled={!ttsText || isGenerating || (!pendingVoiceId && !responseData?.voiceId)}
@@ -326,6 +390,16 @@ function App() {
           onSave={handleSaveVoice}
           voiceId={pendingVoiceId || (responseData && responseData.voiceId)}
         />
+      )}
+      {!currentUser && (
+        <div className="login-section">
+          <button 
+            onClick={() => loginWithGoogle()} 
+            className="google-login-button"
+          >
+            Login with Google
+          </button>
+        </div>
       )}
     </div>
   );

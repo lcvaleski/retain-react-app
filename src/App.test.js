@@ -5,11 +5,28 @@ import { AuthProvider } from './contexts/AuthContext';
 
 // Mock Firebase
 jest.mock('./firebase', () => ({
-  initializeFirebase: jest.fn().mockReturnValue({
-    auth: {},
-    app: {},
-    analytics: {}
-  })
+  app: {},
+  auth: {},
+  analytics: {},
+  db: {
+    collection: jest.fn(() => ({
+      where: jest.fn(() => ({
+        orderBy: jest.fn(() => ({
+          get: jest.fn(() => Promise.resolve({
+            docs: [],
+            forEach: jest.fn()
+          }))
+        }))
+      }))
+    }))
+  }
+}));
+
+// Mock the assets
+jest.mock('./assets', () => ({
+  Family1: '/mock/family1.png',
+  Family2: '/mock/family2.png',
+  Family3: '/mock/family3.png'
 }));
 
 // Mock AuthContext with a default value
@@ -57,9 +74,9 @@ describe('App', () => {
     expect(screen.queryByText(/Clone your voice/i)).not.toBeInTheDocument();
   });
 
-  test('shows upload section when logged in', () => {
+  test('shows TTS section when logged in', () => {
     mockUseAuth.mockReturnValue({
-      currentUser: { email: 'test@example.com' },
+      currentUser: { email: 'test@example.com', isAnonymous: false },
       logout: jest.fn()
     });
 
@@ -68,6 +85,6 @@ describe('App', () => {
         <App />
       </AuthProvider>
     );
-    expect(screen.getByText(/Clone your voice/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/What would you like your voice to say/i)).toBeInTheDocument();
   });
 });

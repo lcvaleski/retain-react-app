@@ -1,18 +1,16 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { initializeFirebase } from '../firebase';
+import { auth } from '../firebase';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut,
   onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
   sendPasswordResetEmail,
   signInAnonymously as firebaseSignInAnonymously,
   linkWithCredential,
-  EmailAuthProvider
+  EmailAuthProvider,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
-import { auth } from '../firebase';
 
 const AuthContext = createContext();
 
@@ -22,34 +20,13 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    let unsubscribe;
-    let firebaseAuth;
-    
-    const initialize = async () => {
-      try {
-        const { auth: authInstance } = await initializeFirebase();
-        firebaseAuth = authInstance;
-        
-        unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
-          setCurrentUser(user);
-          setLoading(false);
-        });
-      } catch (err) {
-        console.error('Auth initialization error:', err);
-        setError(err.message);
-        setLoading(false);
-      }
-    };
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
 
-    initialize();
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
+    return unsubscribe;
   }, []);
 
   async function signInAnonymously() {
@@ -87,51 +64,44 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     if (currentUser?.isAnonymous) {
-      // If user is anonymous, we should link instead of signing in
       return linkAnonymousWithEmail(email, password);
     }
     return signInWithEmailAndPassword(auth, email, password);
   }
 
   async function logout() {
-    return signOut(auth);
-  }
-
-  async function loginWithGoogle() {
-    if (!auth) {
-      throw new Error('Authentication not initialized');
-    }
-    const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+    return auth.signOut();
   }
 
   async function resetPassword(email) {
-    if (!auth) {
-      throw new Error('Authentication not initialized');
-    }
     return sendPasswordResetEmail(auth, email);
+  }
+
+  async function loginWithGoogle() {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      return result.user;
+    } catch (error) {
+      console.error('Google sign-in failed:', error);
+      throw error;
+    }
   }
 
   const value = {
     currentUser,
-    signup,
     login,
+    signup,
     logout,
-    loginWithGoogle,
     resetPassword,
     signInAnonymously,
     linkAnonymousWithEmail,
-    error,
-    loading
+    loginWithGoogle
   };
-
-  if (error) {
-    return <div>Error initializing authentication: {error}</div>;
-  }
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 } 

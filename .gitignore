@@ -27,3 +27,8 @@ keys/
 *.json
 .env
 .env.production
+
+# Firebase
+firestore.rules
+.firebaserc
+firebase-debug.log

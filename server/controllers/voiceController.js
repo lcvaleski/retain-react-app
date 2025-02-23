@@ -1,6 +1,7 @@
 const FormData = require('form-data');
 const fetch = require('node-fetch');
 const debug = require('../utils/debug');
+const Voice = require('../models/Voice');
 
 const CARTESIA_API_URL = 'https://api.cartesia.ai/voices/clone';
 const CARTESIA_API_VERSION = '2024-06-10';
@@ -43,4 +44,29 @@ async function cloneVoice(file) {
   return responseData;
 }
 
-module.exports = { cloneVoice }; 
+async function saveVoice(userId, voiceId, name) {
+  try {
+    const voice = new Voice({
+      userId,
+      voiceId,
+      name,
+      createdAt: new Date()
+    });
+    await voice.save();
+    return voice;
+  } catch (error) {
+    console.error('Error saving voice:', error);
+    throw error;
+  }
+}
+
+async function getVoices(userId) {
+  try {
+    return await Voice.find({ userId }).sort({ createdAt: -1 });
+  } catch (error) {
+    console.error('Error fetching voices:', error);
+    throw error;
+  }
+}
+
+module.exports = { cloneVoice, saveVoice, getVoices }; 

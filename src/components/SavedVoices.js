@@ -11,8 +11,8 @@ function SavedVoices({ voices, onSelect, selectedVoiceId }) {
         {voices.map((voice) => (
           <button
             key={voice.id}
-            className={`voice-item ${voice.id === selectedVoiceId ? 'selected' : ''}`}
-            onClick={() => onSelect(voice.id)}
+            className={`voice-item ${voice.voiceId === selectedVoiceId ? 'selected' : ''}`}
+            onClick={() => onSelect(voice.voiceId)}
           >
             {voice.name}
           </button>
