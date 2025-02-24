@@ -10,8 +10,6 @@ import SavedVoices from './components/SavedVoices';
 import { db } from './firebase';
 import { collection, addDoc, query, where, getDocs, orderBy } from 'firebase/firestore';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
-
 // Core state management for voice cloning and TTS functionality
 function App() {
   // Upload and response states
@@ -38,6 +36,7 @@ function App() {
   const [showNameModal, setShowNameModal] = useState(false);
   const [savedVoices, setSavedVoices] = useState([]);
   const [selectedVoiceId, setSelectedVoiceId] = useState(null);
+  const [showUploadSection, setShowUploadSection] = useState(false);
 
   const prevUserIdRef = useRef(null);
 
@@ -55,6 +54,8 @@ function App() {
 
   // Main function to handle voice recording/file upload
   const handleFileUpload = useCallback(async (fileOrEvent) => {
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+
     const file = fileOrEvent.target?.files?.[0] || fileOrEvent;
     
     try {
@@ -252,6 +253,17 @@ function App() {
     loadSavedVoices();
   }, [currentUser]);
 
+  const handleCreateNewVoice = () => {
+    // Reset any existing voice state
+    setResponseData(null);
+    setPendingVoiceId(null);
+    setAudioUrl(null);
+    setTtsText('');
+    
+    // Show the file upload UI
+    setShowUploadSection(true);
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -271,8 +283,16 @@ function App() {
               />
             ))}
           </div>
-          {(!currentUser || currentUser.isAnonymous) && (
+          {(!currentUser || currentUser.isAnonymous || showUploadSection) && (
             <div className="upload-section">
+              {showUploadSection && (
+                <button 
+                  className="close-upload-button"
+                  onClick={() => setShowUploadSection(false)}
+                >
+                  ×
+                </button>
+              )}
               <input
                 type="file"
                 accept="audio/*"
@@ -314,6 +334,7 @@ function App() {
                 voices={savedVoices} 
                 onSelect={handleVoiceSelect}
                 selectedVoiceId={selectedVoiceId}
+                onCreateNew={handleCreateNewVoice}
               />
               <textarea
                 value={ttsText}

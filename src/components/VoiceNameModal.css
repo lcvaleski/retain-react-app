@@ -76,4 +76,20 @@
 
 .cancel-button:hover {
   background: #f5f5f5;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
+.modal-content button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.modal-content input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
 } 

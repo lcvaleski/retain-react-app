@@ -36,4 +36,37 @@
 .voice-item.selected {
   background: #618868;
   color: white;
+}
+
+.voices-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.create-voice-button {
+  background: #618868;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 24px;
+  line-height: 1;
+  padding: 0;
+}
+
+.create-voice-button:hover {
+  background: #4a6b51;
+  transform: scale(1.05);
+}
+
+.create-voice-button span {
+  margin-top: -2px;
 } 
