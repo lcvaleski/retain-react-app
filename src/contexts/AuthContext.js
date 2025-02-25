@@ -56,10 +56,21 @@ export function AuthProvider({ children }) {
   }
 
   async function signup(email, password) {
-    if (currentUser?.isAnonymous) {
-      return linkAnonymousWithEmail(email, password);
+    try {
+      let userCredential;
+      if (currentUser?.isAnonymous) {
+        // If user is anonymous, link the account
+        const credential = EmailAuthProvider.credential(email, password);
+        userCredential = await linkWithCredential(currentUser, credential);
+      } else {
+        // If no user exists, create a new account
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      }
+      return userCredential.user;
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
     }
-    return createUserWithEmailAndPassword(auth, email, password);
   }
 
   async function login(email, password) {

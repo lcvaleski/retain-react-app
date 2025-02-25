@@ -1,8 +1,13 @@
 import React from 'react';
-import './SavedVoices.css';
+import { useAuth } from '../contexts/AuthContext';
+import '../styles/SavedVoices.css';
 
 function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew }) {
-  if (!voices || voices.length === 0) return null;
+  const { currentUser } = useAuth();
+
+  if (!currentUser || currentUser.isAnonymous) {
+    return null;
+  }
 
   return (
     <div className="saved-voices">
@@ -13,19 +18,24 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew }) {
           onClick={onCreateNew}
           title="Create New Voice"
         >
-          <span>+</span>
+          +
         </button>
       </div>
       <div className="voice-list">
-        {voices.map((voice) => (
+        {voices?.map((voice) => (
           <button
             key={voice.id}
             className={`voice-item ${voice.voiceId === selectedVoiceId ? 'selected' : ''}`}
             onClick={() => onSelect(voice.voiceId)}
           >
-            {voice.name}
+            {voice.name || 'Unnamed Voice'}
           </button>
         ))}
+        {(!voices || voices.length === 0) && (
+          <div className="no-voices">
+            No saved voices yet. Click the + button to create one.
+          </div>
+        )}
       </div>
     </div>
   );
