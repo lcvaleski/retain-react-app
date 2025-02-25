@@ -139,4 +139,20 @@
 
 .forgot-password:hover {
   text-decoration: underline;
+}
+
+.forgot-password-button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: var(--font-size-sm);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  margin: var(--spacing-md) auto 0;
+  display: block;
+}
+
+.forgot-password-button:hover {
+  color: var(--primary-dark);
 } 

@@ -80,32 +80,32 @@
 .upload-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  align-items: center;
+  gap: 1rem;
   width: 100%;
   max-width: 300px;
   margin: 0 auto;
 }
 
-.upload-button, .record-button {
-  background-color: var(--primary);
-  color: var(--white);
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-lg);
+.record-button,
+.upload-button {
+  min-width: 250px;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  text-align: center;
+  background: var(--primary);
+  color: white;
   border: none;
-  font-size: var(--font-size-base);
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  width: 100%;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  white-space: nowrap;
 }
 
-.upload-button:hover, .record-button:hover {
-  background-color: var(--primary-dark);
-  transform: translateY(-1px);
+/* If you're using a label for the upload button, make sure it has the same display properties */
+label.upload-button {
+  display: block;
+  box-sizing: border-box;
 }
 
 #audio-upload {

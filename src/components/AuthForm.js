@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/AuthForm.css';
-import { useNavigate } from 'react-router-dom';
 
 function AuthForm({ onSignupComplete }) {
   const { loginWithGoogle, signup } = useAuth();
@@ -10,7 +9,6 @@ function AuthForm({ onSignupComplete }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   const validateForm = () => {
     if (!email || !password || !confirmPassword) {
@@ -131,9 +129,13 @@ function AuthForm({ onSignupComplete }) {
         Continue with Google
       </button>
 
-      <a href="#" className="forgot-password" onClick={() => {}}>
+      <button
+        type="button"
+        className="forgot-password-button"
+        onClick={() => {}}
+      >
         Forgot Password?
-      </a>
+      </button>
     </form>
   );
 }

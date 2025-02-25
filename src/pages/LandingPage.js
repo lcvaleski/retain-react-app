@@ -17,7 +17,6 @@ function LandingPage() {
   const images = [Family1, Family2, Family3];
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
-  const [pendingFile, setPendingFile] = useState(null);
   const [voiceData, setVoiceData] = useState(null);
 
   // Move the slideshow effect here
