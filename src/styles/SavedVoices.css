@@ -48,17 +48,16 @@
 }
 
 .voice-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 0.75rem 1rem;
   border: 1px solid var(--gray-200);
   border-radius: 8px;
   background: white;
   color: var(--gray-700);
-  text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .voice-item:hover {
@@ -70,6 +69,31 @@
   border-color: var(--primary);
   background: var(--primary-light);
   color: var(--primary-dark);
+}
+
+.voice-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.delete-voice-button {
+  background: none;
+  border: none;
+  color: var(--gray-400);
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.delete-voice-button:hover {
+  color: #dc2626;
+  background: #fee2e2;
 }
 
 .no-voices {
@@ -95,11 +119,12 @@
   }
 
   .voice-item {
-    text-align: center;
-    padding: 1rem 0.5rem;
-    font-size: 0.9rem;
-    height: 100%;
-    justify-content: center;
+    flex-direction: row;
+    padding: 0.75rem;
+  }
+
+  .delete-voice-button {
+    padding: 0.5rem;
   }
 }
 

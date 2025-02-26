@@ -5,7 +5,7 @@ import SavedVoices from '../components/SavedVoices';
 import VoiceNameModal from '../components/VoiceNameModal';
 import CreateVoiceModal from '../components/CreateVoiceModal';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, orderBy, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import '../styles/Dashboard.css';
 
 function Dashboard() {
@@ -166,6 +166,24 @@ function Dashboard() {
     }
   };
 
+  const handleDeleteVoice = async (voiceId) => {
+    try {
+      // Delete from Firestore
+      await deleteDoc(doc(db, 'voices', voiceId));
+
+      // Update the local state
+      setSavedVoices(currentVoices => currentVoices.filter(voice => voice.id !== voiceId));
+
+      // If the deleted voice was selected, clear the selection
+      if (selectedVoiceId === savedVoices.find(v => v.id === voiceId)?.voiceId) {
+        setSelectedVoiceId(null);
+      }
+    } catch (error) {
+      console.error('Error deleting voice:', error);
+      setError('Failed to delete voice: ' + error.message);
+    }
+  };
+
   // If loading or not authenticated, show loading state
   if (isLoading || !currentUser || currentUser.isAnonymous) {
     return <div className="loading">Loading...</div>;
@@ -189,6 +207,7 @@ function Dashboard() {
           onSelect={setSelectedVoiceId}
           selectedVoiceId={selectedVoiceId}
           onCreateNew={() => setShowCreateModal(true)}
+          onDelete={handleDeleteVoice}
         />
 
         <div className="tts-container">

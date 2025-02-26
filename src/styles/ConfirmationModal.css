@@ -1,0 +1,70 @@
+.confirmation-modal {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+
+.confirmation-modal h3 {
+  margin: 0 0 1rem;
+  color: var(--gray-800);
+}
+
+.confirmation-modal p {
+  margin: 0 0 1.5rem;
+  color: var(--gray-600);
+}
+
+.confirmation-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.cancel-button,
+.delete-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+}
+
+.cancel-button:hover {
+  background: var(--gray-200);
+}
+
+.delete-button {
+  background: #dc2626;
+  color: white;
+  border: none;
+}
+
+.delete-button:hover {
+  background: #b91c1c;
+}
+
+@media (max-width: 767px) {
+  .confirmation-modal {
+    margin: 1rem;
+    padding: 1.25rem;
+  }
+
+  .confirmation-buttons {
+    flex-direction: column;
+  }
+
+  .cancel-button,
+  .delete-button {
+    width: 100%;
+  }
+} 
