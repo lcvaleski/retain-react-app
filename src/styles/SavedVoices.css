@@ -11,7 +11,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding-right: 0.5rem;
+  gap: 1rem;
 }
 
 .voices-header h3 {
@@ -21,19 +23,33 @@
 }
 
 .create-voice-button {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--primary);
   color: white;
   border: none;
-  font-size: 1.5rem;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  
+  /* Fix the smushed plus symbol */
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif; /* System font for clean rendering */
+  font-size: 24px;
+  font-weight: 400;
+  padding: 0;
+  line-height: 1;
+  text-align: center;
+  transform: scaleX(1); /* Ensure no horizontal compression */
+  -webkit-font-smoothing: antialiased; /* Smooth font rendering */
+}
+
+/* Remove any potential inherited styles that might affect the plus symbol */
+.create-voice-button span {
+  display: inline-block;
+  transform: scaleX(1);
 }
 
 .create-voice-button:hover {
@@ -105,6 +121,36 @@
   font-size: 0.9rem;
 }
 
+.voices-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.slots-counter {
+  background-color: rgb(243, 244, 246);
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: rgb(107, 114, 128);
+  font-size: 16px;
+}
+
+.empty-slot {
+  background: var(--gray-50);
+  border: 2px dashed var(--gray-200);
+  cursor: default;
+}
+
+.empty-slot:hover {
+  background: var(--gray-50);
+  border: 2px dashed var(--gray-200);
+}
+
+.empty-slot-text {
+  color: var(--gray-400);
+  font-style: italic;
+}
+
 /* Mobile optimizations */
 @media (max-width: 767px) {
   .saved-voices {
@@ -125,6 +171,12 @@
 
   .delete-voice-button {
     padding: 0.5rem;
+  }
+
+  .voices-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
 

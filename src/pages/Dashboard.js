@@ -139,6 +139,12 @@ function Dashboard() {
 
   const handleCreateVoice = async (voiceId, name) => {
     try {
+      // Check if user has reached the limit
+      if (savedVoices.length >= 4) {
+        setError('You have reached the maximum limit of 4 voices. Please delete a voice to create a new one.');
+        return;
+      }
+
       await addDoc(collection(db, 'voices'), {
         userId: currentUser.uid,
         voiceId: voiceId,
@@ -160,6 +166,7 @@ function Dashboard() {
       }));
       
       setSavedVoices(voices);
+      setShowCreateModal(false);
     } catch (error) {
       console.error('Error creating voice:', error);
       setError('Failed to create voice: ' + error.message);

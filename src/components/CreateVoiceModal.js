@@ -1,13 +1,21 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import AudioRecorder from './AudioRecorder';
 import '../styles/CreateVoiceModal.css';
 
-function CreateVoiceModal({ isOpen, onClose, onVoiceCreated }) {
+function CreateVoiceModal({ isOpen, onClose, onVoiceCreated, voiceCount }) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [voiceName, setVoiceName] = useState('');
   const [showNameInput, setShowNameInput] = useState(false);
   const [voiceData, setVoiceData] = useState(null);
+
+  const MAX_VOICES = 4;
+
+  useEffect(() => {
+    if (voiceCount >= MAX_VOICES) {
+      setError('You have reached the maximum limit of 4 voices. Please delete a voice to create a new one.');
+    }
+  }, [voiceCount]);
 
   const handleFileUpload = useCallback(async (fileOrEvent) => {
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
