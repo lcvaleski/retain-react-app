@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './VoiceNameModal.css';
+import '../styles/VoiceNameModal.css';
 
 function VoiceNameModal({ isOpen, onClose, onSave, voiceId }) {
   const [voiceName, setVoiceName] = useState('');
