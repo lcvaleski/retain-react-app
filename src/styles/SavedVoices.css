@@ -64,21 +64,34 @@
 }
 
 .voice-item {
+  padding: 1rem;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--gray-200);
-  border-radius: 8px;
-  background: white;
-  color: var(--gray-700);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+  transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border: 2px solid #eee; /* Light border by default */
 }
 
 .voice-item:hover {
-  border-color: var(--primary);
-  background: var(--gray-50);
+  background: rgb(249, 250, 251);
+  border-color: #e0e0e0;
+}
+
+.voice-item:active {
+  transform: scale(0.96) translateY(2px);
+  background: rgb(243, 247, 244);
+  box-shadow: 0 2px 8px rgba(106, 142, 116, 0.15);
+  border-color: var(--primary); /* Use primary color for active state */
+}
+
+/* Keep empty slots subtle */
+.voice-item.empty {
+  border-color: #eee;
+  border-style: dashed;
 }
 
 .voice-item.selected {
