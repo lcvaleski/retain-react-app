@@ -204,4 +204,132 @@ label.upload-button {
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+}
+
+.auth-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* Make login option button match Google button exactly */
+.login-option-btn {
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 40px;
+}
+
+.login-option-btn:hover {
+  background: #f8f8f8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.email-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.email-login-form input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.email-login-form input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+/* Make login submit button match Google button */
+.login-submit-btn {
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 40px;
+}
+
+.login-submit-btn:hover {
+  background: #f8f8f8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-submit-btn:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.forgot-password-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px;
+  text-align: center;
+  font-family: inherit;
+}
+
+.forgot-password-btn:hover {
+  color: var(--primary);
+}
+
+.error-message {
+  color: #e53e3e;
+  font-size: 14px;
+  padding: 8px;
+  background: #fff5f5;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* Adjust existing Google login button */
+.google-login-btn {
+  margin-top: 0.5rem;
+}
+
+.success-message {
+  color: #2f855a;
+  font-size: 14px;
+  padding: 8px;
+  background: #f0fff4;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.forgot-password-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 } 

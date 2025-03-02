@@ -11,13 +11,18 @@ import logo from '../assets/logo.svg';
 import '../styles/LandingPage.css';
 
 function LandingPage() {
-  const { currentUser, signInAnonymously, loginWithGoogle } = useAuth();
+  const { currentUser, signInAnonymously, loginWithGoogle, login, resetPassword } = useAuth();
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = [Family1, Family2, Family3];
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [voiceData, setVoiceData] = useState(null);
+  const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
 
   // Move the slideshow effect here
   useEffect(() => {
@@ -177,6 +182,38 @@ function LandingPage() {
     }
   };
 
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    try {
+      setError('');
+      setLoading(true);
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Failed to sign in: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address first');
+      return;
+    }
+
+    try {
+      setError('');
+      setLoading(true);
+      await resetPassword(email);
+      setResetMessage('Check your email for password reset instructions');
+    } catch (err) {
+      setError('Failed to reset password: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="landing-page">
       <div className="hero-section">
@@ -240,13 +277,57 @@ function LandingPage() {
 
       <div className="login-section">
         <p className="login-text">Already have an account?</p>
-        <button 
-          className="google-login-button"
-          onClick={handleGoogleLogin}
-          disabled={isUploading}
-        >
-          Sign in with Google
-        </button>
+        <div className="auth-options">
+          <button 
+            className="google-login-button"
+            onClick={handleGoogleLogin}
+            disabled={isUploading}
+          >
+            Sign in with Google
+          </button>
+          {!showEmailLogin ? (
+            <button 
+              className="login-option-btn"
+              onClick={() => setShowEmailLogin(true)}
+            >
+              Sign in with Email
+            </button>
+          ) : (
+            <form onSubmit={handleEmailLogin} className="email-login-form">
+              {error && <div className="error-message">{error}</div>}
+              {resetMessage && <div className="success-message">{resetMessage}</div>}
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="login-submit-btn"
+              >
+                {loading ? 'Signing in...' : 'Sign in'}
+              </button>
+              <button 
+                type="button"
+                className="forgot-password-btn"
+                onClick={handleForgotPassword}
+                disabled={loading}
+              >
+                Forgot Password?
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
