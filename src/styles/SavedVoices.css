@@ -23,38 +23,30 @@
 }
 
 .create-voice-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgb(106, 142, 116);
   color: white;
   border: none;
+  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  
-  /* Fix the smushed plus symbol */
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif; /* System font for clean rendering */
-  font-size: 24px;
-  font-weight: 400;
   padding: 0;
-  line-height: 1;
-  text-align: center;
-  transform: scaleX(1); /* Ensure no horizontal compression */
-  -webkit-font-smoothing: antialiased; /* Smooth font rendering */
+  line-height: 0;
 }
 
-/* Remove any potential inherited styles that might affect the plus symbol */
 .create-voice-button span {
+  margin-top: -2px;
   display: inline-block;
-  transform: scaleX(1);
 }
 
 .create-voice-button:hover {
-  background: var(--primary-dark);
-  transform: scale(1.05);
+  background: rgb(96, 132, 106);
+  transform: scale(1.02);
 }
 
 .voice-list {

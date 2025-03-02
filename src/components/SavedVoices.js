@@ -38,7 +38,7 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
           onClick={onCreateNew}
           aria-label="Create new voice"
         >
-          +
+          <span>+</span>
         </button>
       </div>
       <div className="voice-list">
