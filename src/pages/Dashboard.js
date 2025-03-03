@@ -58,6 +58,10 @@ function Dashboard() {
         }));
         
         setSavedVoices(voices);
+        // Set the first voice as selected by default if there are voices and no voice is currently selected
+        if (voices.length > 0 && !selectedVoiceId) {
+          setSelectedVoiceId(voices[0].voiceId);
+        }
       } catch (error) {
         console.error('Error loading voices:', error);
         setError('Failed to load saved voices');
@@ -65,7 +69,7 @@ function Dashboard() {
     };
 
     fetchVoices();
-  }, [currentUser]);
+  }, [currentUser, selectedVoiceId]);
 
   const generateSpeech = async (voiceId, text) => {
     try {
