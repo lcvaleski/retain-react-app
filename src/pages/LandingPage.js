@@ -293,7 +293,11 @@ function LandingPage() {
               Sign in with Email
             </button>
           ) : (
-            <form onSubmit={handleEmailLogin} className="email-login-form">
+            <form 
+              onSubmit={handleEmailLogin} 
+              className="email-login-form"
+              data-testid="email-login-form"
+            >
               {error && <div className="error-message">{error}</div>}
               {resetMessage && <div className="success-message">{resetMessage}</div>}
               <input
@@ -310,12 +314,12 @@ function LandingPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <button 
-                type="submit" 
-                disabled={loading}
+              <button
                 className="login-submit-btn"
+                type="submit"
+                data-testid="email-login-submit"
               >
-                {loading ? 'Signing in...' : 'Sign in'}
+                Sign in
               </button>
               <button 
                 type="button"
