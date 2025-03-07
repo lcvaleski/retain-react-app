@@ -117,7 +117,10 @@ router.get('/voices/:userId', async (req, res) => {
 // Updated Stripe checkout endpoint
 router.post('/create-checkout', async (req, res) => {
   if (!stripe) {
-    return res.status(500).json({ error: 'Stripe is not properly configured' });
+    console.error('Stripe not initialized');
+    return res.status(500).json({ 
+      error: 'Stripe is not properly configured'
+    });
   }
 
   try {
@@ -126,6 +129,8 @@ router.post('/create-checkout', async (req, res) => {
       (process.env.NODE_ENV === 'production' 
         ? 'https://www.retainvoice.com'
         : 'http://localhost:3000');
+
+    console.log('Creating checkout session with baseUrl:', baseUrl);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -147,10 +152,16 @@ router.post('/create-checkout', async (req, res) => {
       cancel_url: `${baseUrl}/dashboard?payment=cancelled`,
     });
 
-    res.json({ url: session.url });
+    console.log('Checkout session created:', session.id);
+    
+    return res.status(200).json({
+      url: session.url
+    });
+
   } catch (error) {
     console.error('Stripe session creation error:', error);
-    res.status(500).json({ 
+    
+    return res.status(500).json({ 
       error: process.env.NODE_ENV === 'production' 
         ? 'Payment session creation failed' 
         : error.message 

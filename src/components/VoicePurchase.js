@@ -12,14 +12,33 @@ function VoicePurchase() {
       
       const response = await fetch('/api/create-checkout', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
+      // Log the response for debugging in production
+      console.log('Response status:', response.status);
+      
+      let data;
+      const textResponse = await response.text();
+      console.log('Raw response:', textResponse);
+      
+      try {
+        data = JSON.parse(textResponse);
+      } catch (parseError) {
+        console.error('JSON Parse error:', parseError);
+        throw new Error('Invalid response from server');
+      }
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout session');
+        throw new Error(data.error || 'Failed to create checkout session');
       }
       
-      const data = await response.json();
+      if (!data.url) {
+        throw new Error('No checkout URL received');
+      }
+
       window.location.href = data.url;
     } catch (error) {
       console.error('Purchase error:', error);
@@ -33,7 +52,7 @@ function VoicePurchase() {
     <div className="voice-purchase">
       <div className="purchase-card">
         <h3>Unlock More Voices</h3>
-        <p className="price">$5</p>
+        <p className="price">$4.99</p>
         <ul className="features">
           <li>4 Additional Voice Clones</li>
           <li>Unlimited Usage</li>
