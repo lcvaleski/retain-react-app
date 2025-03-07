@@ -116,6 +116,9 @@ router.get('/voices/:userId', async (req, res) => {
 
 // Updated Stripe checkout endpoint
 router.post('/create-checkout', async (req, res) => {
+  console.log('Checkout endpoint hit:', new Date().toISOString());
+
+  // Check if Stripe is initialized
   if (!stripe) {
     console.error('Stripe not initialized');
     return res.status(500).json({ 
@@ -130,7 +133,11 @@ router.post('/create-checkout', async (req, res) => {
         ? 'https://www.retainvoice.com'
         : 'http://localhost:3000');
 
-    console.log('Creating checkout session with baseUrl:', baseUrl);
+    console.log('Creating checkout session with:', {
+      baseUrl,
+      environment: process.env.NODE_ENV,
+      stripeInitialized: !!stripe
+    });
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -152,14 +159,27 @@ router.post('/create-checkout', async (req, res) => {
       cancel_url: `${baseUrl}/dashboard?payment=cancelled`,
     });
 
-    console.log('Checkout session created:', session.id);
+    console.log('Checkout session created:', {
+      sessionId: session.id,
+      url: session.url
+    });
+    
+    // Set explicit headers
+    res.setHeader('Content-Type', 'application/json');
     
     return res.status(200).json({
       url: session.url
     });
 
   } catch (error) {
-    console.error('Stripe session creation error:', error);
+    console.error('Stripe session creation error:', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Set explicit headers
+    res.setHeader('Content-Type', 'application/json');
     
     return res.status(500).json({ 
       error: process.env.NODE_ENV === 'production' 

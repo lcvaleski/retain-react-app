@@ -10,38 +10,54 @@ function VoicePurchase() {
       setIsLoading(true);
       setError(null);
       
+      console.log('Starting checkout process...');
+      
       const response = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
       });
       
-      // Log the response for debugging in production
-      console.log('Response status:', response.status);
+      console.log('Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      const textResponse = await response.text();
+      console.log('Raw response body:', textResponse);
       
       let data;
-      const textResponse = await response.text();
-      console.log('Raw response:', textResponse);
-      
       try {
         data = JSON.parse(textResponse);
+        console.log('Parsed response data:', data);
       } catch (parseError) {
-        console.error('JSON Parse error:', parseError);
-        throw new Error('Invalid response from server');
+        console.error('JSON Parse error:', {
+          error: parseError,
+          receivedText: textResponse
+        });
+        throw new Error(`Server response not valid JSON: ${textResponse.substring(0, 100)}`);
       }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create checkout session');
+        throw new Error(data.error || `Server error: ${response.status} ${response.statusText}`);
       }
       
       if (!data.url) {
-        throw new Error('No checkout URL received');
+        console.error('Missing URL in response:', data);
+        throw new Error('No checkout URL in server response');
       }
 
+      console.log('Redirecting to checkout:', data.url);
       window.location.href = data.url;
     } catch (error) {
-      console.error('Purchase error:', error);
+      console.error('Purchase error details:', {
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
       setError(error.message);
     } finally {
       setIsLoading(false);
