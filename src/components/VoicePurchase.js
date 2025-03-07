@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import '../styles/VoicePurchase.css';
 
 function VoicePurchase({ isOpen, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { currentUser } = useAuth();
 
   const handlePurchase = async () => {
+    if (!currentUser) {
+      setError('Please sign in to purchase voice clones');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -15,7 +22,10 @@ function VoicePurchase({ isOpen, onClose }) {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          userId: currentUser.uid
+        })
       });
       
       const data = await response.json();
@@ -61,7 +71,7 @@ function VoicePurchase({ isOpen, onClose }) {
             </ul>
             <button 
               onClick={handlePurchase}
-              disabled={isLoading}
+              disabled={isLoading || !currentUser}
               className="purchase-button"
             >
               {isLoading ? 'Processing...' : 'Upgrade Now'}

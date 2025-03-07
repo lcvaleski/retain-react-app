@@ -1,10 +1,13 @@
 const express = require('express');
 const cors = require('cors');
-const apiRoutes = require('./routes/api');
+const apiRouter = require('./routes/api');
 
 const app = express();
 
-app.set('trust proxy', 1);
+// Handle Stripe webhook raw bodies BEFORE any other middleware
+app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }));
+
+// Regular middleware for other routes
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -23,6 +26,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/api', apiRoutes);
+// API routes
+app.use('/api', apiRouter);
 
 module.exports = app; 

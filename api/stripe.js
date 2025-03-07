@@ -22,6 +22,12 @@ module.exports = async (req, res) => {
   }
 
   try {
+    // Get userId from request body
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
     const baseUrl = process.env.CLIENT_URL || 
       (process.env.NODE_ENV === 'production' 
         ? 'https://www.retainvoice.com'
@@ -43,8 +49,12 @@ module.exports = async (req, res) => {
         },
       ],
       mode: 'payment',
-      success_url: `${baseUrl}/dashboard?payment=success`,
+      success_url: `${baseUrl}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/dashboard?payment=cancelled`,
+      metadata: {
+        userId: userId,
+        voiceCount: 4
+      }
     });
 
     res.json({ url: session.url });

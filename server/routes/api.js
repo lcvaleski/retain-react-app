@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const { uploadToStorage } = require('../controllers/uploadController');
 const { cloneVoice, saveVoice, getVoices } = require('../controllers/voiceController');
 const stripeHandler = require('../../api/stripe');
+const stripeWebhookHandler = require('../../api/stripe-webhook');
 const debug = require('../utils/debug');
 const { generateSpeech } = require('../controllers/ttsController');
 
@@ -105,7 +106,10 @@ router.get('/voices/:userId', async (req, res) => {
   }
 });
 
-// Stripe endpoint
+// Stripe routes
 router.post('/stripe', stripeHandler);
+
+// Stripe webhook needs raw body for signature verification
+router.post('/stripe-webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 
 module.exports = router; 
