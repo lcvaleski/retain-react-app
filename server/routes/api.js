@@ -4,7 +4,7 @@ const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const { uploadToStorage } = require('../controllers/uploadController');
 const { cloneVoice, saveVoice, getVoices } = require('../controllers/voiceController');
-const { createCheckoutSession } = require('../../api/stripe');
+const stripeHandler = require('../../api/stripe');
 const debug = require('../utils/debug');
 const { generateSpeech } = require('../controllers/ttsController');
 
@@ -106,6 +106,6 @@ router.get('/voices/:userId', async (req, res) => {
 });
 
 // Stripe endpoint
-router.post('/create-checkout', createCheckoutSession);
+router.post('/stripe', stripeHandler);
 
 module.exports = router; 

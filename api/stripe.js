@@ -6,7 +6,21 @@ const stripe = new Stripe(process.env.NODE_ENV === 'production'
   : process.env.STRIPE_SECRET_KEY_TEST
 );
 
-async function createCheckoutSession(req, res) {
+module.exports = async (req, res) => {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle preflight request
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
     const baseUrl = process.env.CLIENT_URL || 
       (process.env.NODE_ENV === 'production' 
@@ -42,8 +56,4 @@ async function createCheckoutSession(req, res) {
         : error.message 
     });
   }
-}
-
-module.exports = {
-  createCheckoutSession
 }; 

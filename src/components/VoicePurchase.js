@@ -12,7 +12,7 @@ function VoicePurchase() {
       
       console.log('Starting checkout process...');
       
-      const response = await fetch('/api/create-checkout', {
+      const response = await fetch('/api/stripe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
