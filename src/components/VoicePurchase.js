@@ -38,11 +38,12 @@ function VoicePurchase() {
           error: parseError,
           receivedText: textResponse
         });
-        throw new Error(`Server response not valid JSON: ${textResponse.substring(0, 100)}`);
+        throw new Error('Server response not valid JSON');
       }
 
       if (!response.ok) {
-        throw new Error(data.error || `Server error: ${response.status} ${response.statusText}`);
+        const errorMessage = data.error?.message || data.error || 'Server error';
+        throw new Error(errorMessage);
       }
       
       if (!data.url) {
@@ -58,7 +59,7 @@ function VoicePurchase() {
         stack: error.stack,
         timestamp: new Date().toISOString()
       });
-      setError(error.message);
+      setError(typeof error.message === 'string' ? error.message : 'Failed to create checkout session');
     } finally {
       setIsLoading(false);
     }

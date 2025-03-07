@@ -4,18 +4,9 @@ const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const { uploadToStorage } = require('../controllers/uploadController');
 const { cloneVoice, saveVoice, getVoices } = require('../controllers/voiceController');
+const { createCheckoutSession } = require('../../api/stripe');
 const debug = require('../utils/debug');
 const { generateSpeech } = require('../controllers/ttsController');
-
-let stripe;
-try {
-  stripe = require('stripe')(process.env.NODE_ENV === 'production' 
-    ? process.env.STRIPE_SECRET_KEY_LIVE 
-    : process.env.STRIPE_SECRET_KEY_TEST
-  );
-} catch (error) {
-  console.error('Failed to initialize Stripe:', error);
-}
 
 const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
@@ -114,79 +105,7 @@ router.get('/voices/:userId', async (req, res) => {
   }
 });
 
-// Updated Stripe checkout endpoint
-router.post('/create-checkout', async (req, res) => {
-  console.log('Checkout endpoint hit:', new Date().toISOString());
-
-  // Check if Stripe is initialized
-  if (!stripe) {
-    console.error('Stripe not initialized');
-    return res.status(500).json({ 
-      error: 'Stripe is not properly configured'
-    });
-  }
-
-  try {
-    // Get the URL based on environment
-    const baseUrl = process.env.CLIENT_URL || 
-      (process.env.NODE_ENV === 'production' 
-        ? 'https://www.retainvoice.com'
-        : 'http://localhost:3000');
-
-    console.log('Creating checkout session with:', {
-      baseUrl,
-      environment: process.env.NODE_ENV,
-      stripeInitialized: !!stripe
-    });
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: '4 Voice Pack',
-              description: 'Unlock the ability to create 4 additional voice clones',
-            },
-            unit_amount: 499, // $4.99
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${baseUrl}/dashboard?payment=success`,
-      cancel_url: `${baseUrl}/dashboard?payment=cancelled`,
-    });
-
-    console.log('Checkout session created:', {
-      sessionId: session.id,
-      url: session.url
-    });
-    
-    // Set explicit headers
-    res.setHeader('Content-Type', 'application/json');
-    
-    return res.status(200).json({
-      url: session.url
-    });
-
-  } catch (error) {
-    console.error('Stripe session creation error:', {
-      message: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Set explicit headers
-    res.setHeader('Content-Type', 'application/json');
-    
-    return res.status(500).json({ 
-      error: process.env.NODE_ENV === 'production' 
-        ? 'Payment session creation failed' 
-        : error.message 
-    });
-  }
-});
+// Stripe endpoint
+router.post('/create-checkout', createCheckoutSession);
 
 module.exports = router; 
