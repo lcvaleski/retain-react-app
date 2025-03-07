@@ -7,6 +7,16 @@ const { cloneVoice, saveVoice, getVoices } = require('../controllers/voiceContro
 const debug = require('../utils/debug');
 const { generateSpeech } = require('../controllers/ttsController');
 
+let stripe;
+try {
+  stripe = require('stripe')(process.env.NODE_ENV === 'production' 
+    ? process.env.STRIPE_SECRET_KEY_LIVE 
+    : process.env.STRIPE_SECRET_KEY_TEST
+  );
+} catch (error) {
+  console.error('Failed to initialize Stripe:', error);
+}
+
 const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
@@ -101,6 +111,50 @@ router.get('/voices/:userId', async (req, res) => {
   } catch (error) {
     console.error('Get voices error:', error);
     res.status(500).json({ message: 'Failed to fetch voices' });
+  }
+});
+
+// Updated Stripe checkout endpoint
+router.post('/create-checkout', async (req, res) => {
+  if (!stripe) {
+    return res.status(500).json({ error: 'Stripe is not properly configured' });
+  }
+
+  try {
+    // Get the URL based on environment
+    const baseUrl = process.env.CLIENT_URL || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://www.retainvoice.com'
+        : 'http://localhost:3000');
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: '4 Voice Pack',
+              description: 'Unlock the ability to create 4 additional voice clones',
+            },
+            unit_amount: 499, // $4.99
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${baseUrl}/dashboard?payment=success`,
+      cancel_url: `${baseUrl}/dashboard?payment=cancelled`,
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Stripe session creation error:', error);
+    res.status(500).json({ 
+      error: process.env.NODE_ENV === 'production' 
+        ? 'Payment session creation failed' 
+        : error.message 
+    });
   }
 });
 

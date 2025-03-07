@@ -7,6 +7,7 @@ import CreateVoiceModal from '../components/CreateVoiceModal';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, orderBy, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import '../styles/Dashboard.css';
+import VoicePurchase from '../components/VoicePurchase';
 
 function Dashboard() {
   const { currentUser, logout } = useAuth();
@@ -213,6 +214,7 @@ function Dashboard() {
       </header>
 
       <main className="dashboard-content">
+        <VoicePurchase />
         <SavedVoices 
           voices={savedVoices} 
           onSelect={setSelectedVoiceId}
