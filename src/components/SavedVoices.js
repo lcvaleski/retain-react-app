@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import ConfirmationModal from './ConfirmationModal';
+import VoicePurchase from './VoicePurchase';
 import '../styles/SavedVoices.css';
 
 function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete }) {
   const { currentUser } = useAuth();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [voiceToDelete, setVoiceToDelete] = useState(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   
   const MAX_VOICES = 4;
+  const MAX_FREE_VOICES = 1;
   const availableSlots = MAX_VOICES - (voices?.length || 0);
 
   const handleDeleteClick = (e, voice) => {
@@ -25,6 +28,14 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
     }
   };
 
+  const handleCreateNew = () => {
+    if (voices.length >= MAX_FREE_VOICES) {
+      setShowPurchaseModal(true);
+    } else {
+      onCreateNew();
+    }
+  };
+
   if (!currentUser || currentUser.isAnonymous) {
     return null;
   }
@@ -35,7 +46,7 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
         <h2>Your Saved Voices</h2>
         <button 
           className="create-voice-button"
-          onClick={onCreateNew}
+          onClick={handleCreateNew}
           aria-label="Create new voice"
         >
           <span>+</span>
@@ -80,6 +91,11 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
         onConfirm={handleConfirmDelete}
         title="Delete Voice"
         message={`Are you sure you want to delete "${voiceToDelete?.name || 'this voice'}"? This action cannot be undone.`}
+      />
+
+      <VoicePurchase 
+        isOpen={showPurchaseModal} 
+        onClose={() => setShowPurchaseModal(false)} 
       />
     </div>
   );

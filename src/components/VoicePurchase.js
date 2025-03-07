@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/VoicePurchase.css';
 
-function VoicePurchase() {
+function VoicePurchase({ isOpen, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -9,8 +9,6 @@ function VoicePurchase() {
     try {
       setIsLoading(true);
       setError(null);
-      
-      console.log('Starting checkout process...');
       
       const response = await fetch('/api/stripe', {
         method: 'POST',
@@ -20,69 +18,57 @@ function VoicePurchase() {
         }
       });
       
-      console.log('Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-      
-      const textResponse = await response.text();
-      console.log('Raw response body:', textResponse);
-      
-      let data;
-      try {
-        data = JSON.parse(textResponse);
-        console.log('Parsed response data:', data);
-      } catch (parseError) {
-        console.error('JSON Parse error:', {
-          error: parseError,
-          receivedText: textResponse
-        });
-        throw new Error('Server response not valid JSON');
-      }
+      const data = await response.json();
 
       if (!response.ok) {
-        const errorMessage = data.error?.message || data.error || 'Server error';
-        throw new Error(errorMessage);
+        throw new Error(data.error || 'Failed to create checkout session');
       }
       
       if (!data.url) {
-        console.error('Missing URL in response:', data);
         throw new Error('No checkout URL in server response');
       }
 
-      console.log('Redirecting to checkout:', data.url);
       window.location.href = data.url;
     } catch (error) {
-      console.error('Purchase error details:', {
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-      });
-      setError(typeof error.message === 'string' ? error.message : 'Failed to create checkout session');
+      console.error('Purchase error:', error);
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="voice-purchase">
-      <div className="purchase-card">
-        <h3>Unlock More Voices</h3>
-        <p className="price">$4.99</p>
-        <ul className="features">
-          <li>4 Additional Voice Clones</li>
-          <li>Unlimited Usage</li>
-          <li>Never Expires</li>
-        </ul>
-        <button 
-          onClick={handlePurchase}
-          disabled={isLoading}
-          className="purchase-button"
-        >
-          {isLoading ? 'Processing...' : 'Purchase Now'}
-        </button>
-        {error && <p className="error-message">{error}</p>}
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>&times;</button>
+        <div className="voice-purchase">
+          <div className="purchase-card">
+            <h3>Unlock Premium Voices</h3>
+            <div className="price">
+              <span className="price-amount">
+                <span className="price-currency">$</span>
+                4.99
+              </span>
+              <span className="price-type">one-time payment</span>
+            </div>
+            <ul className="features">
+              <li>4 Additional Voice Clones</li>
+              <li>Unlimited Text-to-Speech Usage</li>
+              <li>Premium Voice Quality</li>
+              <li>One-Time Purchase, No Subscription</li>
+            </ul>
+            <button 
+              onClick={handlePurchase}
+              disabled={isLoading}
+              className="purchase-button"
+            >
+              {isLoading ? 'Processing...' : 'Upgrade Now'}
+            </button>
+            {error && <p className="error-message">{error}</p>}
+          </div>
+        </div>
       </div>
     </div>
   );
