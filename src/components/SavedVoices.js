@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import ConfirmationModal from './ConfirmationModal';
 import VoicePurchase from './VoicePurchase';
 import '../styles/SavedVoices.css';
@@ -9,10 +11,31 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [voiceToDelete, setVoiceToDelete] = useState(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [hasPremium, setHasPremium] = useState(false);
   
   const MAX_VOICES = 4;
   const MAX_FREE_VOICES = 1;
   const availableSlots = MAX_VOICES - (voices?.length || 0);
+
+  useEffect(() => {
+    async function checkPremiumStatus() {
+      if (!currentUser) return;
+      
+      try {
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+          // If they have purchased voices, they have premium
+          setHasPremium(userDoc.data().purchasedVoices > 0);
+        }
+      } catch (error) {
+        console.error('Error checking premium status:', error);
+      }
+    }
+
+    checkPremiumStatus();
+  }, [currentUser]);
 
   const handleDeleteClick = (e, voice) => {
     e.stopPropagation();
@@ -29,7 +52,7 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
   };
 
   const handleCreateNew = () => {
-    if (voices.length >= MAX_FREE_VOICES) {
+    if (voices.length >= MAX_FREE_VOICES && !hasPremium) {
       setShowPurchaseModal(true);
     } else {
       onCreateNew();
@@ -71,8 +94,14 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
         ))}
         {/* Show empty slots */}
         {Array.from({ length: availableSlots }).map((_, index) => (
-          <div key={`empty-slot-${index}`} className="voice-item empty-slot">
-            <span className="empty-slot-text">Empty Slot</span>
+          <div 
+            key={`empty-slot-${index}`} 
+            className="voice-item empty-slot"
+            onClick={handleCreateNew}
+          >
+            <span className="empty-slot-text">
+              {hasPremium ? 'Click to Create Voice' : 'Empty Slot'}
+            </span>
           </div>
         ))}
         {(!voices || voices.length === 0) && (
