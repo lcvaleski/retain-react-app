@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import AudioRecorder from './AudioRecorder';
 import '../styles/CreateVoiceModal.css';
+import { analytics } from '../firebase';
+import { logEvent } from 'firebase/analytics';
 
 function CreateVoiceModal({ isOpen, onClose, onVoiceCreated, voiceCount }) {
   const [isUploading, setIsUploading] = useState(false);
@@ -67,7 +69,16 @@ function CreateVoiceModal({ isOpen, onClose, onVoiceCreated, voiceCount }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setIsUploading(true);
+    setError(null);
+
+    // Track start of voice creation
+    logEvent(analytics, 'voice_creation_started', {
+      source: 'create_modal'
+    });
+
+    const startTime = Date.now();
+
     if (!voiceName.trim()) {
       setError('Please enter a name for your voice');
       return;
@@ -75,9 +86,26 @@ function CreateVoiceModal({ isOpen, onClose, onVoiceCreated, voiceCount }) {
 
     try {
       await onVoiceCreated(voiceData.voiceId, voiceName.trim());
+
+      // Track successful creation
+      logEvent(analytics, 'voice_creation_completed', {
+        duration: (Date.now() - startTime) / 1000,
+        success: true
+      });
+
       handleClose();
     } catch (error) {
+      console.error('Error:', error);
       setError(error.message);
+
+      // Track failed creation
+      logEvent(analytics, 'voice_creation_completed', {
+        duration: (Date.now() - startTime) / 1000,
+        success: false,
+        errorType: error.message
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -88,6 +116,13 @@ function CreateVoiceModal({ isOpen, onClose, onVoiceCreated, voiceCount }) {
     setError(null);
     onClose();
   };
+
+  // Track modal open
+  useEffect(() => {
+    if (isOpen) {
+      logEvent(analytics, 'create_voice_modal_opened');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

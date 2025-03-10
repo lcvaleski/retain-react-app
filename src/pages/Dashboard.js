@@ -4,7 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import SavedVoices from '../components/SavedVoices';
 import VoiceNameModal from '../components/VoiceNameModal';
 import CreateVoiceModal from '../components/CreateVoiceModal';
-import { db } from '../firebase';
+import { db, analytics } from '../firebase';
+import { logEvent } from 'firebase/analytics';
 import { collection, query, where, getDocs, orderBy, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import '../styles/Dashboard.css';
 import VoicePurchase from '../components/VoicePurchase';
@@ -72,7 +73,58 @@ function Dashboard() {
     fetchVoices();
   }, [currentUser, selectedVoiceId]);
 
+  // Track session engagement
+  useEffect(() => {
+    const sessionStartTime = Date.now();
+    let lastInteractionTime = Date.now();
+    let interactionCount = 0;
+
+    const trackInteraction = () => {
+      const now = Date.now();
+      interactionCount++;
+      
+      // Log every 5 interactions or after 5 minutes
+      if (interactionCount % 5 === 0 || now - lastInteractionTime > 300000) {
+        try {
+          logEvent(analytics, 'dashboard_engagement', {
+            timeSpent: (now - sessionStartTime) / 1000,
+            interactionCount,
+            activeVoiceId: selectedVoiceId || 'none'
+          });
+        } catch (error) {
+          console.error('Analytics error:', error);
+        }
+      }
+      lastInteractionTime = now;
+    };
+
+    document.addEventListener('click', trackInteraction);
+    document.addEventListener('keypress', trackInteraction);
+
+    return () => {
+      document.removeEventListener('click', trackInteraction);
+      document.removeEventListener('keypress', trackInteraction);
+      
+      // Log final session stats
+      try {
+        logEvent(analytics, 'dashboard_session_end', {
+          totalTime: (Date.now() - sessionStartTime) / 1000,
+          totalInteractions: interactionCount
+        });
+      } catch (error) {
+        console.error('Analytics error:', error);
+      }
+    };
+  }, [selectedVoiceId]);
+
   const generateSpeech = async (voiceId, text) => {
+    const startTime = Date.now();
+    
+    logEvent(analytics, 'tts_generation_started', {
+      voiceId: voiceId,
+      characterCount: text.length
+    });
+
     try {
       setIsGenerating(true);
       setError(null);
@@ -101,8 +153,19 @@ function Dashboard() {
       
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
+
+      logEvent(analytics, 'tts_generation_completed', {
+        voiceId: voiceId,
+        duration: (Date.now() - startTime) / 1000,
+        success: true,
+        characterCount: text.length
+      });
     } catch (error) {
-      console.error('generateSpeech error:', error);
+      logEvent(analytics, 'tts_generation_error', {
+        voiceId: voiceId,
+        error: error.message,
+        characterCount: text.length
+      });
       setError(error.message);
     } finally {
       setIsGenerating(false);
@@ -196,6 +259,14 @@ function Dashboard() {
     }
   };
 
+  // Track voice selection
+  const handleVoiceSelect = (voiceId) => {
+    setSelectedVoiceId(voiceId);
+    logEvent(analytics, 'voice_selected', {
+      voiceId
+    });
+  };
+
   // If loading or not authenticated, show loading state
   if (isLoading || !currentUser || currentUser.isAnonymous) {
     return <div className="loading">Loading...</div>;
@@ -217,7 +288,7 @@ function Dashboard() {
         <VoicePurchase />
         <SavedVoices 
           voices={savedVoices} 
-          onSelect={setSelectedVoiceId}
+          onSelect={handleVoiceSelect}
           selectedVoiceId={selectedVoiceId}
           onCreateNew={() => setShowCreateModal(true)}
           onDelete={handleDeleteVoice}

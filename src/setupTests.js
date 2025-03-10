@@ -11,12 +11,18 @@ jest.mock('./assets', () => ({
   Family3: 'mock-image-url-3'
 }));
 
+// Mock Firebase Analytics
+jest.mock('firebase/analytics', () => ({
+  getAnalytics: jest.fn(() => ({})),
+  logEvent: jest.fn()
+}));
+
 // Mock the entire Firebase module
-jest.mock('firebase/app', () => ({
-  initializeApp: jest.fn(() => ({})),
-  getAuth: jest.fn(() => ({})),
-  getFirestore: jest.fn(() => ({})),
-  getAnalytics: jest.fn(() => ({}))
+jest.mock('./firebase', () => ({
+  app: {},
+  auth: {},
+  db: {},
+  analytics: {}
 }));
 
 // Mock Firebase Auth
@@ -41,17 +47,4 @@ jest.mock('firebase/firestore', () => ({
   addDoc: jest.fn(),
   deleteDoc: jest.fn(),
   doc: jest.fn()
-}));
-
-// Mock Firebase Analytics
-jest.mock('firebase/analytics', () => ({
-  getAnalytics: jest.fn(() => ({}))
-}));
-
-// Mock the Firebase module itself
-jest.mock('./firebase', () => ({
-  app: {},
-  auth: {},
-  analytics: {},
-  db: {}
 }));
