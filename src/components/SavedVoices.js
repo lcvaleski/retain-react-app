@@ -12,30 +12,32 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
   const [voiceToDelete, setVoiceToDelete] = useState(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [hasPremium, setHasPremium] = useState(false);
+  const [lastPurchaseCheck, setLastPurchaseCheck] = useState(0);
   
   const MAX_VOICES = 4;
   const MAX_FREE_VOICES = 1;
   const availableSlots = MAX_VOICES - (voices?.length || 0);
 
-  useEffect(() => {
-    async function checkPremiumStatus() {
-      if (!currentUser) return;
+  const checkPremiumStatus = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userDoc = await getDoc(userRef);
       
-      try {
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userRef);
-        
-        if (userDoc.exists()) {
-          // If they have purchased voices, they have premium
-          setHasPremium(userDoc.data().purchasedVoices > 0);
-        }
-      } catch (error) {
-        console.error('Error checking premium status:', error);
+      if (userDoc.exists()) {
+        // If they have purchased voices, they have premium
+        setHasPremium(userDoc.data().purchasedVoices > 0);
       }
+    } catch (error) {
+      console.error('Error checking premium status:', error);
     }
+  };
 
+  // Check premium status on mount and when lastPurchaseCheck changes
+  useEffect(() => {
     checkPremiumStatus();
-  }, [currentUser]);
+  }, [currentUser, lastPurchaseCheck]);
 
   const handleDeleteClick = (e, voice) => {
     e.stopPropagation();
@@ -58,6 +60,21 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
       onCreateNew();
     }
   };
+
+  const handlePurchaseComplete = () => {
+    setShowPurchaseModal(false);
+    setLastPurchaseCheck(Date.now()); // Trigger a premium status recheck
+  };
+
+  // Check URL parameters for payment success
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    if (queryParams.get('payment') === 'success') {
+      handlePurchaseComplete();
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   if (!currentUser || currentUser.isAnonymous) {
     return null;
@@ -124,7 +141,8 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
 
       <VoicePurchase 
         isOpen={showPurchaseModal} 
-        onClose={() => setShowPurchaseModal(false)} 
+        onClose={() => setShowPurchaseModal(false)}
+        onPurchaseComplete={handlePurchaseComplete}
       />
     </div>
   );

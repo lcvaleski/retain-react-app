@@ -4,7 +4,7 @@ import { logEvent } from 'firebase/analytics';
 import { analytics } from '../firebase';
 import '../styles/VoicePurchase.css';
 
-function VoicePurchase({ isOpen, onClose }) {
+function VoicePurchase({ isOpen, onClose, onPurchaseComplete }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const { currentUser } = useAuth();
@@ -116,6 +116,18 @@ function VoicePurchase({ isOpen, onClose }) {
     }
     onClose();
   };
+
+  // Check URL parameters for successful purchase
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    if (queryParams.get('payment') === 'success') {
+      if (onPurchaseComplete) {
+        onPurchaseComplete();
+      }
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [onPurchaseComplete]);
 
   if (!isOpen) return null;
 
