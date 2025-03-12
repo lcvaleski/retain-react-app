@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -18,7 +18,7 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
   const MAX_FREE_VOICES = 1;
   const availableSlots = MAX_VOICES - (voices?.length || 0);
 
-  const checkPremiumStatus = async () => {
+  const checkPremiumStatus = useCallback(async () => {
     if (!currentUser) return;
     
     try {
@@ -32,12 +32,12 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
     } catch (error) {
       console.error('Error checking premium status:', error);
     }
-  };
+  }, [currentUser]);
 
   // Check premium status on mount and when lastPurchaseCheck changes
   useEffect(() => {
     checkPremiumStatus();
-  }, [currentUser, lastPurchaseCheck]);
+  }, [currentUser, lastPurchaseCheck, checkPremiumStatus]);
 
   const handleDeleteClick = (e, voice) => {
     e.stopPropagation();
