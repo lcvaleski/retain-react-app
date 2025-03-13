@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import ConfirmationModal from './ConfirmationModal';
 import VoicePurchase from './VoicePurchase';
@@ -47,16 +47,40 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
           console.error('[DEBUG] Failed to store premium status in sessionStorage:', storageError);
         }
       } else {
-        console.log('[DEBUG] User document does not exist for uid:', currentUser.uid);
-        // Try to get from sessionStorage as fallback
+        console.log('[DEBUG] User document does not exist, creating it...');
         try {
-          const storedPremium = sessionStorage.getItem('hasPremium');
-          if (storedPremium !== null) {
-            console.log('[DEBUG] Using stored premium status:', storedPremium);
-            setHasPremium(JSON.parse(storedPremium));
+          // Create the user document with default values
+          await setDoc(userRef, {
+            email: currentUser.email,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            purchasedVoices: 0,
+            uid: currentUser.uid
+          });
+          console.log('[DEBUG] Created new user document');
+          
+          // Set default premium status
+          setHasPremium(false);
+          
+          // Store in sessionStorage
+          try {
+            sessionStorage.setItem('hasPremium', 'false');
+            sessionStorage.setItem('lastPremiumCheck', Date.now().toString());
+          } catch (storageError) {
+            console.error('[DEBUG] Failed to store premium status in sessionStorage:', storageError);
           }
-        } catch (storageError) {
-          console.error('[DEBUG] Failed to read from sessionStorage:', storageError);
+        } catch (createError) {
+          console.error('[DEBUG] Failed to create user document:', createError);
+          // Try to get from sessionStorage as fallback
+          try {
+            const storedPremium = sessionStorage.getItem('hasPremium');
+            if (storedPremium !== null) {
+              console.log('[DEBUG] Using stored premium status:', storedPremium);
+              setHasPremium(JSON.parse(storedPremium));
+            }
+          } catch (storageError) {
+            console.error('[DEBUG] Failed to read from sessionStorage:', storageError);
+          }
         }
       }
     } catch (error) {
