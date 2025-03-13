@@ -91,7 +91,7 @@ const Terms = () => {
         <p>
           For questions about these Terms of Service, please contact:
           <br />
-          <a href="mailto:terms@retain.ai">terms@retain.ai</a>
+          <a href="mailto:support@coventrylabs.net">support@coventrylabs.net</a>
         </p>
       </section>
 

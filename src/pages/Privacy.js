@@ -74,7 +74,7 @@ const Privacy = () => {
         <p>
           If you have any questions about this Privacy Policy, please contact us at:
           <br />
-          <a href="mailto:privacy@retain.ai">privacy@retain.ai</a>
+          <a href="mailto:support@coventrylabs.net">support@coventrylabs.net</a>
         </p>
       </section>
 

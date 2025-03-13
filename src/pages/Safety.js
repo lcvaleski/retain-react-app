@@ -90,7 +90,7 @@ const Safety = () => {
         <p>
           For immediate safety concerns or to report violations, contact us at:
           <br />
-          <a href="mailto:safety@retain.ai">safety@retain.ai</a>
+          <a href="mailto:support@coventrylabs.net">support@coventrylabs.net</a>
         </p>
       </section>
 
