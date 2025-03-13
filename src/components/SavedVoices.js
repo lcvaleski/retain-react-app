@@ -175,13 +175,54 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
       
       // Set a flag in sessionStorage to persist the success state
       try {
-        sessionStorage.setItem('lastSuccessfulPayment', JSON.stringify({
+        const paymentData = {
           timestamp: Date.now(),
           sessionId,
           userId: currentUser.uid
-        }));
+        };
+        sessionStorage.setItem('lastSuccessfulPayment', JSON.stringify(paymentData));
+        
+        // Attempt to manually update the document if webhook hasn't done it
+        const verifyAndUpdateDocument = async () => {
+          try {
+            const userRef = doc(db, 'users', currentUser.uid);
+            const userDoc = await getDoc(userRef);
+            
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              console.log('[DEBUG] Verifying document update after purchase:', userData);
+              
+              // If purchasedVoices is still 0 after success URL, attempt update
+              if (userData.purchasedVoices === 0) {
+                console.log('[DEBUG] Document not updated by webhook, attempting manual update');
+                await setDoc(userRef, {
+                  ...userData,
+                  purchasedVoices: 4,
+                  lastManualUpdate: {
+                    timestamp: serverTimestamp(),
+                    sessionId,
+                    reason: 'webhook_fallback'
+                  },
+                  updatedAt: serverTimestamp()
+                }, { merge: true });
+                console.log('[DEBUG] Manual document update completed');
+              }
+            }
+          } catch (error) {
+            console.error('[DEBUG] Error in verifyAndUpdateDocument:', error);
+          }
+        };
+
+        // Check and update document after delays to allow webhook time to process
+        const updateCheckTimes = [3000, 8000, 15000]; // 3s, 8s, 15s
+        updateCheckTimes.forEach(delay => {
+          setTimeout(async () => {
+            console.log(`[DEBUG] Verifying document update after ${delay}ms`);
+            await verifyAndUpdateDocument();
+          }, delay);
+        });
       } catch (error) {
-        console.error('[DEBUG] Failed to store payment success in sessionStorage:', error);
+        console.error('[DEBUG] Failed to handle payment success:', error);
       }
 
       handlePurchaseComplete();
@@ -190,7 +231,7 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
       window.history.replaceState({}, document.title, window.location.pathname);
       
       // Schedule multiple rechecks to handle potential delays in webhook processing
-      const checkTimes = [2000, 5000, 10000]; // 2s, 5s, 10s
+      const checkTimes = [2000, 5000, 10000, 20000]; // 2s, 5s, 10s, 20s
       checkTimes.forEach(delay => {
         setTimeout(() => {
           console.log(`[DEBUG] Scheduled recheck after ${delay}ms`);
