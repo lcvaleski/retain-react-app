@@ -19,7 +19,10 @@ if (!admin.apps.length) {
 }
 
 // Initialize Stripe with your secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.NODE_ENV === 'production' 
+  ? process.env.STRIPE_SECRET_KEY_LIVE 
+  : process.env.STRIPE_SECRET_KEY_TEST
+);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 module.exports = async (req, res) => {

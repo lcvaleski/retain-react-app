@@ -267,6 +267,39 @@ function Dashboard() {
     });
   };
 
+  const handleDownload = () => {
+    if (!audioUrl) return;
+    
+    // Get the voice name from saved voices
+    const selectedVoice = savedVoices.find(voice => voice.voiceId === selectedVoiceId);
+    const voiceName = selectedVoice?.name || 'voice';
+    
+    // Create a sanitized version of the text for the filename
+    const textPreview = ttsText.slice(0, 30).replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    
+    // Create filename with voice name, text preview, and timestamp
+    const filename = `${voiceName}-${textPreview}-${Date.now()}.mp3`;
+    
+    // Create a temporary anchor element
+    const a = document.createElement('a');
+    a.href = audioUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // Track download event
+    try {
+      logEvent(analytics, 'audio_downloaded', {
+        voiceId: selectedVoiceId,
+        voiceName: voiceName,
+        textLength: ttsText.length
+      });
+    } catch (error) {
+      console.error('Analytics error:', error);
+    }
+  };
+
   // If loading or not authenticated, show loading state
   if (isLoading || !currentUser || currentUser.isAnonymous) {
     return <div className="loading">Loading...</div>;
@@ -315,6 +348,13 @@ function Dashboard() {
               <audio controls src={audioUrl}>
                 Your browser does not support the audio element.
               </audio>
+              <button 
+                onClick={handleDownload}
+                className="download-button"
+                title="Download audio"
+              >
+                Download MP3
+              </button>
             </div>
           )}
         </div>
