@@ -39,6 +39,7 @@ function LandingPage() {
     
     try {
       setError(null);
+      setIsUploading(true);
       
       // File validation
       if (!file) {
@@ -53,8 +54,7 @@ function LandingPage() {
         throw new Error('File size must be less than 10MB');
       }
 
-      setIsUploading(true);
-      
+      // Create form data with additional metadata
       const formData = new FormData();
       formData.append('audio', file);
       
@@ -62,19 +62,43 @@ function LandingPage() {
         formData.append('userId', currentUser.uid);
       }
 
+      // Add timestamp to help debug production issues
+      formData.append('timestamp', Date.now().toString());
+
+      // Improved error handling for the fetch request
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
-        headers: { 'Accept': 'application/json' },
+        headers: { 
+          'Accept': 'application/json',
+          // Remove Content-Type header to let browser set it with boundary
+        },
       });
 
+      // First try to get the response as text
       const responseText = await response.text();
       
       let data;
       try {
         data = JSON.parse(responseText);
-        
-        if (currentUser && !currentUser.isAnonymous) {
+      } catch (e) {
+        console.error('Response parsing error:', {
+          status: response.status,
+          statusText: response.statusText,
+          text: responseText,
+          error: e.message
+        });
+        throw new Error(`Server response error: ${response.status} ${response.statusText}`);
+      }
+
+      // Check for error responses even if the request was "ok"
+      if (!response.ok || data.error) {
+        throw new Error(data.error || data.message || data.details || 'Upload failed');
+      }
+
+      // Handle successful upload
+      if (currentUser && !currentUser.isAnonymous) {
+        try {
           await addDoc(collection(db, 'voices'), {
             userId: currentUser.uid,
             voiceId: data.voiceId,
@@ -82,25 +106,27 @@ function LandingPage() {
             createdAt: new Date()
           });
           navigate('/dashboard');
-        } else {
-          setVoiceData(data);
-          if (!currentUser) {
-            console.log('Creating anonymous account...');
-            await signInAnonymously();
-          }
+        } catch (dbError) {
+          console.error('Database error:', dbError);
+          throw new Error('Failed to save voice to database');
         }
-      } catch (e) {
-        console.error('Parse error:', { text: responseText, error: e.message });
-        throw new Error(`Failed to parse response: ${responseText.substring(0, 100)}...`);
-      }
-
-      if (!response.ok) {
-        throw new Error(data.details || data.message || 'Upload failed');
+      } else {
+        setVoiceData(data);
+        if (!currentUser) {
+          console.log('Creating anonymous account...');
+          await signInAnonymously();
+        }
       }
 
     } catch (error) {
-      console.error('Upload error:', error);
-      setError(error.message);
+      console.error('Upload error details:', {
+        message: error.message,
+        stack: error.stack,
+        fileName: file?.name,
+        fileType: file?.type,
+        fileSize: file?.size,
+      });
+      setError(error.message || 'Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
     }

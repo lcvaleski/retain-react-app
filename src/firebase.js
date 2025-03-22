@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getAnalytics } from 'firebase/analytics';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -16,7 +17,14 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const analytics = getAnalytics(app);
+const storage = getStorage(app);
+
+// Initialize analytics only if supported (won't fail in environments that block it)
+let analytics = null;
+isSupported().then(yes => {
+  if (yes) analytics = getAnalytics(app);
+}).catch(console.error);
+
 const db = getFirestore(app);
 
-export { app, auth, analytics, db }; 
+export { app, auth, analytics, db, storage }; 
