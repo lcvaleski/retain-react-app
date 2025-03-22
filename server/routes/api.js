@@ -21,23 +21,43 @@ const uploadLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.post('/upload', uploadLimiter, upload.single('audio'), async (req, res) => {
+// Error handling middleware
+const errorHandler = (err, req, res, next) => {
+  console.error('API Error:', {
+    error: err,
+    stack: err.stack,
+    body: req.body,
+    file: req.file,
+    headers: req.headers
+  });
+
+  res.status(500).json({
+    message: 'Upload failed',
+    details: err.message,
+    code: err.code
+  });
+};
+
+router.post('/upload', uploadLimiter, upload.single('audio'), async (req, res, next) => {
   try {
-    const { file } = await uploadToStorage(req, res);
-    const cloneResult = await cloneVoice(file);
-    
-    res.status(200).json({
-      message: 'Voice uploaded and cloned successfully',
-      voiceId: cloneResult.id,
-      language: cloneResult.language,
-      createdAt: cloneResult.created_at
+    console.log('Upload request received:', {
+      file: req.file ? {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      } : null,
+      body: req.body,
+      headers: req.headers
     });
+
+    if (!req.file) {
+      throw new Error('No file uploaded');
+    }
+
+    const result = await uploadToStorage(req, res);
+    res.json(result);
   } catch (error) {
-    debug('Error:', error);
-    res.status(500).json({
-      message: 'Operation failed',
-      details: error.message
-    });
+    next(error); // Pass to error handler
   }
 });
 
@@ -111,5 +131,8 @@ router.post('/stripe', stripeHandler);
 
 // Stripe webhook needs raw body for signature verification
 router.post('/stripe-webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
+
+// Add error handling middleware
+router.use(errorHandler);
 
 module.exports = router; 

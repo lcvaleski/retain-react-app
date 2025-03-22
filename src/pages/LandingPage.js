@@ -41,6 +41,15 @@ function LandingPage() {
       setError(null);
       setIsUploading(true);
       
+      // Add debug logging
+      console.log('Starting upload:', {
+        fileName: file?.name,
+        fileType: file?.type,
+        fileSize: file?.size,
+        isAuthenticated: !!currentUser,
+        userId: currentUser?.uid
+      });
+      
       // File validation
       if (!file) {
         throw new Error('No file selected');
@@ -54,7 +63,6 @@ function LandingPage() {
         throw new Error('File size must be less than 10MB');
       }
 
-      // Create form data with additional metadata
       const formData = new FormData();
       formData.append('audio', file);
       
@@ -62,36 +70,48 @@ function LandingPage() {
         formData.append('userId', currentUser.uid);
       }
 
-      // Add timestamp to help debug production issues
+      // Add debug metadata
       formData.append('timestamp', Date.now().toString());
+      formData.append('debug', JSON.stringify({
+        fileInfo: {
+          type: file.type,
+          size: file.size,
+          lastModified: file.lastModified
+        },
+        userInfo: {
+          isAuthenticated: !!currentUser,
+          isAnonymous: currentUser?.isAnonymous,
+          uid: currentUser?.uid
+        }
+      }));
 
-      // Improved error handling for the fetch request
+      console.log('Sending request to /api/upload...');
+      
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
-        headers: { 
-          'Accept': 'application/json',
-          // Remove Content-Type header to let browser set it with boundary
-        },
       });
 
-      // First try to get the response as text
+      console.log('Received response:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
       const responseText = await response.text();
+      console.log('Response text:', responseText);
       
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (e) {
-        console.error('Response parsing error:', {
-          status: response.status,
-          statusText: response.statusText,
+        console.error('Failed to parse response:', {
           text: responseText,
-          error: e.message
+          error: e
         });
-        throw new Error(`Server response error: ${response.status} ${response.statusText}`);
+        throw new Error(`Server error: ${response.status} ${response.statusText}`);
       }
 
-      // Check for error responses even if the request was "ok"
       if (!response.ok || data.error) {
         throw new Error(data.error || data.message || data.details || 'Upload failed');
       }
@@ -125,6 +145,7 @@ function LandingPage() {
         fileName: file?.name,
         fileType: file?.type,
         fileSize: file?.size,
+        response: error.response,
       });
       setError(error.message || 'Upload failed. Please try again.');
     } finally {

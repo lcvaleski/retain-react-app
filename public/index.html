@@ -26,13 +26,12 @@
     -->
     <title>Retain</title>
     <script>
-    window.addEventListener('error', function(e) {
-      // Ignore Vercel analytics/insights errors as they're not critical
-      if (e.filename?.includes('/_vercel/')) {
-        e.preventDefault();
-        console.warn('Non-critical script load failed:', e.filename);
-      }
-    });
+      window.addEventListener('error', function(e) {
+        if (e.filename?.includes('/_vercel/')) {
+          e.preventDefault();
+          console.warn('Non-critical script load failed:', e.filename);
+        }
+      });
     </script>
   </head>
   <body>
