@@ -290,20 +290,26 @@ function LandingPage() {
         <h1 className="upload-title">Get started by cloning your voice below.</h1>
         <p className="upload-subtitle">Introduce yourself for 10 seconds.</p>
         
-        <div className="upload-actions">
+        <div className="voice-upload-section">
           <AudioRecorder 
-            onRecordingComplete={handleFileUpload} 
+            onRecordingComplete={handleFileUpload}
             disabled={isUploading}
           />
+
+          <div className="upload-divider">
+            <span>or</span>
+          </div>
+
           <input
             type="file"
             accept="audio/*"
             onChange={handleFileUpload}
-            id="audio-upload"
+            id="voice-upload"
             disabled={isUploading}
+            style={{ display: 'none' }}
           />
           <label 
-            htmlFor="audio-upload" 
+            htmlFor="voice-upload" 
             className={`upload-button ${isUploading ? 'uploading' : ''}`}
           >
             {isUploading ? (
@@ -315,6 +321,7 @@ function LandingPage() {
               'Upload Voice Recording'
             )}
           </label>
+          <div className="file-types-hint">Supported formats: MP3, WAV, M4A (max 10MB)</div>
         </div>
 
         {error && <p className="error-message">{error}</p>}

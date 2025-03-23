@@ -167,6 +167,7 @@ function CreateVoiceModal({ isOpen, onClose, onVoiceCreated, voiceCount }) {
                 'Upload Voice Recording'
               )}
             </label>
+            <div className="file-types-hint">Supported formats: MP3, WAV, M4A (max 10MB)</div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="voice-name-form">

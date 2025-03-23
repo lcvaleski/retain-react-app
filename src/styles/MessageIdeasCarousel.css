@@ -9,6 +9,23 @@
   margin: 0 auto 2rem auto;
 }
 
+.message-ideas-header {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.message-ideas-header h2 {
+  font-size: 1.25rem;
+  color: var(--gray-800);
+  margin: 0 0 0.5rem 0;
+}
+
+.message-ideas-header p {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 .message-carousel-container {
   height: 80px;
   display: flex;
