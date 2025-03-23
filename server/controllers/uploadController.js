@@ -25,44 +25,84 @@ async function checkStorageQuota() {
   return totalSize < STORAGE_QUOTA_BYTES;
 }
 
-async function uploadToStorage(req, res) {
+async function uploadToStorage(req) {
   if (!bucket) {
-    return res.status(500).json({ message: 'Storage not configured' });
+    throw new Error('Storage not configured');
+  }
+
+  if (!req.file) {
+    throw new Error('No file provided');
   }
 
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-
     // Validate file type
     const allowedTypes = [
       'audio/mpeg', 'audio/wav', 'audio/mp4',
       'audio/m4a', 'audio/x-m4a'
     ];
+    
     if (!allowedTypes.includes(req.file.mimetype)) {
-      return res.status(400).json({ message: 'Invalid file type' });
+      throw new Error(`Invalid file type: ${req.file.mimetype}`);
     }
 
     const underQuota = await checkStorageQuota();
     if (!underQuota) {
-      return res.status(507).json({ message: 'Storage quota exceeded' });
+      throw new Error('Storage quota exceeded');
     }
 
-    const filename = `audio-${Date.now()}${path.extname(req.file.originalname)}`;
+    // Create a unique filename
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(7);
+    const filename = `audio-${timestamp}-${randomString}${path.extname(req.file.originalname)}`;
+    
     const blob = bucket.file(filename);
+    
+    // Upload with explicit content type and metadata
     const blobStream = blob.createWriteStream({
       resumable: false,
-      metadata: { contentType: req.file.mimetype },
+      metadata: { 
+        contentType: req.file.mimetype,
+        metadata: {
+          originalName: req.file.originalname,
+          timestamp: timestamp.toString(),
+          userId: req.body.userId || 'anonymous'
+        }
+      }
     });
 
     return new Promise((resolve, reject) => {
-      blobStream.on('error', (error) => reject(error));
-      blobStream.on('finish', () => resolve({ blob, file: req.file }));
-      blobStream.end(req.file.buffer);
+      blobStream.on('error', (error) => {
+        console.error('Blob stream error:', error);
+        reject(new Error('Failed to upload file: ' + error.message));
+      });
+
+      blobStream.on('finish', () => {
+        resolve({ 
+          blob, 
+          file: req.file,
+          path: filename
+        });
+      });
+
+      // Handle the upload
+      try {
+        blobStream.end(req.file.buffer);
+      } catch (error) {
+        console.error('Buffer write error:', error);
+        reject(new Error('Failed to process file buffer'));
+      }
     });
 
   } catch (error) {
+    console.error('Upload to storage error:', {
+      error: error.message,
+      stack: error.stack,
+      file: req.file ? {
+        name: req.file.originalname,
+        type: req.file.mimetype,
+        size: req.file.size
+      } : null
+    });
     throw error;
   }
 }

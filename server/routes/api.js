@@ -47,17 +47,66 @@ router.post('/upload', uploadLimiter, upload.single('audio'), async (req, res, n
         size: req.file.size
       } : null,
       body: req.body,
-      headers: req.headers
+      debug: req.body.debug ? JSON.parse(req.body.debug) : null,
+      timestamp: req.body.timestamp
     });
 
     if (!req.file) {
-      throw new Error('No file uploaded');
+      return res.status(400).json({ 
+        message: 'No file uploaded',
+        success: false 
+      });
     }
 
-    const result = await uploadToStorage(req, res);
-    res.json(result);
+    // Validate file size
+    if (req.file.size > 10 * 1024 * 1024) {
+      return res.status(400).json({ 
+        message: 'File too large',
+        success: false 
+      });
+    }
+
+    // Validate mime type
+    const allowedTypes = ['audio/wav', 'audio/mpeg', 'audio/mp4', 'audio/x-m4a'];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ 
+        message: 'Invalid file type',
+        success: false 
+      });
+    }
+
+    try {
+      const result = await uploadToStorage(req);
+      const cloneResult = await cloneVoice(result.file);
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Voice uploaded and cloned successfully',
+        voiceId: cloneResult.id,
+        language: cloneResult.language,
+        createdAt: cloneResult.created_at
+      });
+    } catch (uploadError) {
+      console.error('Upload/Clone error:', uploadError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to process voice',
+        details: uploadError.message
+      });
+    }
   } catch (error) {
-    next(error); // Pass to error handler
+    console.error('Request handling error:', {
+      error: error.message,
+      stack: error.stack,
+      file: req.file,
+      body: req.body
+    });
+    
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      details: error.message
+    });
   }
 });
 

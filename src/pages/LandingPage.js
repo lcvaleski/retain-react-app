@@ -41,15 +41,6 @@ function LandingPage() {
       setError(null);
       setIsUploading(true);
       
-      // Add debug logging
-      console.log('Starting upload:', {
-        fileName: file?.name,
-        fileType: file?.type,
-        fileSize: file?.size,
-        isAuthenticated: !!currentUser,
-        userId: currentUser?.uid
-      });
-      
       // File validation
       if (!file) {
         throw new Error('No file selected');
@@ -70,50 +61,46 @@ function LandingPage() {
         formData.append('userId', currentUser.uid);
       }
 
-      // Add debug metadata
-      formData.append('timestamp', Date.now().toString());
-      formData.append('debug', JSON.stringify({
-        fileInfo: {
-          type: file.type,
-          size: file.size,
-          lastModified: file.lastModified
-        },
-        userInfo: {
-          isAuthenticated: !!currentUser,
-          isAnonymous: currentUser?.isAnonymous,
-          uid: currentUser?.uid
-        }
-      }));
+      // Add request ID for tracking
+      const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      formData.append('requestId', requestId);
 
-      console.log('Sending request to /api/upload...');
-      
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
+      console.log(`Starting upload (${requestId}):`, {
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size
       });
 
-      console.log('Received response:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
       });
 
       const responseText = await response.text();
-      console.log('Response text:', responseText);
-      
+      console.log(`Upload response (${requestId}):`, responseText);
+
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (e) {
-        console.error('Failed to parse response:', {
+        console.error(`Parse error (${requestId}):`, {
           text: responseText,
           error: e
         });
-        throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        throw new Error(
+          response.ok 
+            ? 'Invalid server response' 
+            : `Server error: ${response.status} ${response.statusText}`
+        );
       }
 
-      if (!response.ok || data.error) {
-        throw new Error(data.error || data.message || data.details || 'Upload failed');
+      if (!response.ok || !data.success) {
+        throw new Error(data.details || data.message || 'Upload failed');
+      }
+
+      // Make sure we have a voiceId before setting voiceData
+      if (!data.voiceId) {
+        throw new Error('No voice ID returned from server');
       }
 
       // Handle successful upload
@@ -131,7 +118,13 @@ function LandingPage() {
           throw new Error('Failed to save voice to database');
         }
       } else {
-        setVoiceData(data);
+        // Set full voice data
+        setVoiceData({
+          voiceId: data.voiceId,
+          language: data.language,
+          createdAt: data.createdAt
+        });
+        
         if (!currentUser) {
           console.log('Creating anonymous account...');
           await signInAnonymously();
@@ -139,13 +132,14 @@ function LandingPage() {
       }
 
     } catch (error) {
-      console.error('Upload error details:', {
+      console.error('Upload error:', {
         message: error.message,
         stack: error.stack,
-        fileName: file?.name,
-        fileType: file?.type,
-        fileSize: file?.size,
-        response: error.response,
+        file: file ? {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        } : null
       });
       setError(error.message || 'Upload failed. Please try again.');
     } finally {
@@ -190,9 +184,13 @@ function LandingPage() {
 
   // Let's also modify the AuthForm component to properly handle the signup completion
   const handleSignupComplete = useCallback(async (user) => {
-    
-    if (voiceData) {
+    if (voiceData && voiceData.voiceId) {
       try {
+        console.log('Saving voice after signup:', {
+          userId: user.uid,
+          voiceData
+        });
+
         await addDoc(collection(db, 'voices'), {
           userId: user.uid,
           voiceId: voiceData.voiceId,
@@ -203,17 +201,23 @@ function LandingPage() {
         setVoiceData(null);
         navigate('/dashboard');
       } catch (error) {
-        console.error('Error saving voice after signup:', error);
+        console.error('Error saving voice after signup:', {
+          error,
+          voiceData,
+          userId: user.uid
+        });
         setError('Failed to save voice after signup: ' + error.message);
       }
+    } else {
+      console.warn('No valid voice data found:', voiceData);
+      navigate('/dashboard');
     }
   }, [voiceData, navigate]);
 
   const handleGoogleLogin = async () => {
     try {
       const user = await loginWithGoogle();
-      if (voiceData) {
-        // If there's pending voice data, save it before redirecting
+      if (voiceData && voiceData.voiceId) {
         await addDoc(collection(db, 'voices'), {
           userId: user.uid,
           voiceId: voiceData.voiceId,
