@@ -54,18 +54,27 @@
   gap: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-  grid-template-columns: 1fr;
+  padding: 0 1rem;
 }
 
 @media (min-width: 768px) {
   .dashboard-content {
     grid-template-columns: 300px 1fr;
   }
+
+  .voice-content {
+    grid-column: 2;
+    max-width: 800px;
+  }
 }
 
 .tts-container {
-  background: white;
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
   padding: 1.5rem;
+  background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -74,6 +83,7 @@
 }
 
 .tts-input {
+  margin-top: 1rem;
   width: 100%;
   min-height: 120px;
   padding: 1rem;
@@ -192,4 +202,45 @@
   .speak-button {
     width: 100%;
   }
+
+  .dashboard-content {
+    grid-template-columns: 1fr;
+  }
+
+  .voice-content {
+    grid-column: 1;
+  }
+
+  .message-ideas-carousel,
+  .tts-container {
+    margin: 1rem 0;
+  }
+}
+
+/* Add styles for the voice input section */
+.voice-input-header {
+  margin-bottom: 1rem;
+}
+
+.voice-input-header h2 {
+  font-size: 1.25rem;
+  color: var(--gray-800);
+  margin: 0 0 0.5rem 0;
+}
+
+/* Update the message ideas carousel container */
+.message-ideas-carousel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+/* Add styles for the voice sidebar */
+.voice-sidebar {
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
 } 

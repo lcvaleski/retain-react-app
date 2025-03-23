@@ -1,0 +1,52 @@
+.message-ideas-carousel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto 2rem auto;
+}
+
+.message-carousel-container {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.message-idea {
+  text-align: center;
+  transition: all 0.5s ease-in-out;
+  position: absolute;
+  font-style: italic;
+  color: var(--primary);
+  font-size: 1.1rem;
+  width: 100%;
+  padding: 0 1rem;
+}
+
+.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-out {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .message-ideas-carousel {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .message-idea {
+    font-size: 1rem;
+  }
+} 

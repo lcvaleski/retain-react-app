@@ -248,7 +248,7 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
   return (
     <div className="saved-voices">
       <div className="voices-header">
-        <h2>Your Saved Voices</h2>
+        <h2>Saved Voices</h2>
         <button 
           className="create-voice-button"
           onClick={handleCreateNew}

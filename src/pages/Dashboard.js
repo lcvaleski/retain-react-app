@@ -9,6 +9,7 @@ import { logEvent } from 'firebase/analytics';
 import { collection, query, where, getDocs, orderBy, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import '../styles/Dashboard.css';
 import VoicePurchase from '../components/VoicePurchase';
+import MessageIdeasCarousel from '../components/MessageIdeasCarousel';
 
 function Dashboard() {
   const { currentUser, logout } = useAuth();
@@ -318,49 +319,55 @@ function Dashboard() {
       </header>
 
       <main className="dashboard-content">
-        <VoicePurchase />
-        <SavedVoices 
-          voices={savedVoices} 
-          onSelect={handleVoiceSelect}
-          selectedVoiceId={selectedVoiceId}
-          onCreateNew={() => setShowCreateModal(true)}
-          onDelete={handleDeleteVoice}
-        />
-
-        <div className="tts-container">
-          <textarea
-            value={ttsText}
-            onChange={(e) => setTtsText(e.target.value)}
-            placeholder="What would you like your voice to say?"
-            disabled={isGenerating}
-            className="tts-input"
+        <div className="voice-sidebar">
+          <VoicePurchase />
+          <SavedVoices 
+            voices={savedVoices} 
+            onSelect={handleVoiceSelect}
+            selectedVoiceId={selectedVoiceId}
+            onCreateNew={() => setShowCreateModal(true)}
+            onDelete={handleDeleteVoice}
           />
-          <button
-            onClick={() => generateSpeech(selectedVoiceId, ttsText)}
-            disabled={!ttsText || isGenerating || !selectedVoiceId}
-            className={`speak-button ${isGenerating ? 'generating' : ''}`}
-          >
-            {isGenerating ? 'Generating...' : 'Speak'}
-          </button>
-
-          {audioUrl && (
-            <div className="audio-player">
-              <audio controls src={audioUrl}>
-                Your browser does not support the audio element.
-              </audio>
-              <button 
-                onClick={handleDownload}
-                className="download-button"
-                title="Download audio"
-              >
-                Download MP3
-              </button>
-            </div>
-          )}
         </div>
 
-        {error && <p className="error-message">{error}</p>}
+        <div className="voice-content">
+          <MessageIdeasCarousel />
+          
+          <div className="tts-container">
+            <textarea
+              value={ttsText}
+              onChange={(e) => setTtsText(e.target.value)}
+              placeholder="What would you like your voice to say?"
+              disabled={isGenerating}
+              className="tts-input"
+            />
+            <button
+              onClick={() => generateSpeech(selectedVoiceId, ttsText)}
+              disabled={!ttsText || isGenerating || !selectedVoiceId}
+              className={`speak-button ${isGenerating ? 'generating' : ''}`}
+            >
+              {isGenerating ? 'Generating...' : 'Speak'}
+            </button>
 
+            {audioUrl && (
+              <div className="audio-player">
+                <audio controls src={audioUrl}>
+                  Your browser does not support the audio element.
+                </audio>
+                <button 
+                  onClick={handleDownload}
+                  className="download-button"
+                  title="Download audio"
+                >
+                  Download MP3
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {error && <p className="error-message">{error}</p>}
+        
         <CreateVoiceModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}

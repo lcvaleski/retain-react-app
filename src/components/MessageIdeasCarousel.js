@@ -1,0 +1,43 @@
+import React, { useState, useEffect } from 'react';
+import '../styles/MessageIdeasCarousel.css';
+
+const messageIdeas = [
+  "Happy birthday! I wish I could be there to celebrate with you.",
+  "I'm so proud of everything you've accomplished.",
+  "Remember that time we went fishing at the lake?",
+  "Your grandpa's favorite bedtime story was...",
+  "I love you to the moon and back.",
+  "Here's our family's secret recipe for chocolate chip cookies...",
+  "Remember to always follow your dreams, just like we talked about.",
+  "Congratulations on your graduation! I knew you could do it.",
+  "This was your grandmother's favorite lullaby..."
+];
+
+function MessageIdeasCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentIndex((current) => (current + 1) % messageIdeas.length);
+        setIsTransitioning(false);
+      }, 500);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="message-ideas-carousel">
+      <div className="message-carousel-container">
+        <div className={`message-idea ${isTransitioning ? 'fade-out' : 'fade-in'}`}>
+          "{messageIdeas[currentIndex]}"
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default MessageIdeasCarousel; 
