@@ -274,7 +274,10 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
             <span className="voice-name">{voice.name || 'Unnamed Voice'}</span>
             <button
               className="delete-voice-button"
-              onClick={(e) => handleDeleteClick(e, voice)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteClick(voice);
+              }}
               title="Delete Voice"
             >
               ×
