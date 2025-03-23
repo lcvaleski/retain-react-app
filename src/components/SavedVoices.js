@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import ConfirmationModal from './ConfirmationModal';
 import VoicePurchase from './VoicePurchase';
 import '../styles/SavedVoices.css';
 import DeleteVoiceModal from './DeleteVoiceModal';

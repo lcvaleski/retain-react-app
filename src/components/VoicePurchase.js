@@ -104,20 +104,6 @@ function VoicePurchase({ isOpen, onClose, onPurchaseComplete }) {
     }
   };
 
-  // Track modal close without purchase
-  const handleClose = () => {
-    if (modalOpenTimeRef.current) {
-      try {
-        logEvent(analytics, 'purchase_modal_closed', {
-          timeSpent: Date.now() - modalOpenTimeRef.current
-        });
-      } catch (error) {
-        console.error('Analytics error:', error);
-      }
-    }
-    onClose();
-  };
-
   // Check URL parameters for successful purchase
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
