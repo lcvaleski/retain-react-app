@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import ConfirmationModal from './ConfirmationModal';
 import VoicePurchase from './VoicePurchase';
 import '../styles/SavedVoices.css';
+import DeleteVoiceModal from './DeleteVoiceModal';
 
 function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete }) {
   const { currentUser } = useAuth();
@@ -13,6 +14,7 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [hasPremium, setHasPremium] = useState(false);
   const [lastPurchaseCheck, setLastPurchaseCheck] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const MAX_VOICES = 4;
   const MAX_FREE_VOICES = 1;
@@ -118,16 +120,22 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
     return () => clearTimeout(retryTimeout);
   }, [currentUser, lastPurchaseCheck, checkPremiumStatus]);
 
-  const handleDeleteClick = (e, voice) => {
-    e.stopPropagation();
+  const handleDeleteClick = (voice) => {
     setVoiceToDelete(voice);
     setShowDeleteModal(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (voiceToDelete) {
+  const handleDeleteConfirm = async () => {
+    if (!voiceToDelete) return;
+    
+    setIsDeleting(true);
+    try {
       await onDelete(voiceToDelete.id);
       setShowDeleteModal(false);
+    } catch (error) {
+      console.error('Failed to delete voice:', error);
+    } finally {
+      setIsDeleting(false);
       setVoiceToDelete(null);
     }
   };
@@ -293,15 +301,15 @@ function SavedVoices({ voices, onSelect, selectedVoiceId, onCreateNew, onDelete 
         )}
       </div>
 
-      <ConfirmationModal
+      <DeleteVoiceModal
         isOpen={showDeleteModal}
         onClose={() => {
           setShowDeleteModal(false);
           setVoiceToDelete(null);
         }}
-        onConfirm={handleConfirmDelete}
-        title="Delete Voice"
-        message={`Are you sure you want to delete "${voiceToDelete?.name || 'this voice'}"? This action cannot be undone.`}
+        onConfirm={handleDeleteConfirm}
+        voiceName={voiceToDelete?.name || ''}
+        isDeleting={isDeleting}
       />
 
       <VoicePurchase 

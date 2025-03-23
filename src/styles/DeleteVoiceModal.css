@@ -1,0 +1,79 @@
+.delete-voice-modal {
+  text-align: center;
+  width: 100%;
+}
+
+.delete-voice-modal h3 {
+  color: #dc3545;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.delete-voice-modal p {
+  color: #666;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.voice-name {
+  color: #333;
+  font-weight: 600;
+}
+
+.delete-modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.cancel-button {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+.delete-button {
+  padding: 0.75rem 1.5rem;
+  background: #dc3545;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-button:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.cancel-button:disabled,
+.delete-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .delete-modal-buttons {
+    flex-direction: column;
+  }
+
+  .cancel-button,
+  .delete-button {
+    width: 100%;
+  }
+} 

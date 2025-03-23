@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { logEvent } from 'firebase/analytics';
 import { analytics } from '../firebase';
+import Modal from './common/Modal';
 import '../styles/VoicePurchase.css';
 
 function VoicePurchase({ isOpen, onClose, onPurchaseComplete }) {
@@ -129,40 +130,35 @@ function VoicePurchase({ isOpen, onClose, onPurchaseComplete }) {
     }
   }, [onPurchaseComplete]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="modal-overlay" onClick={handleClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={handleClose}>&times;</button>
-        <div className="voice-purchase">
-          <div className="purchase-card">
-            <h3>Unlock Premium Voices</h3>
-            <div className="price">
-              <span className="price-amount">
-                <span className="price-currency">$</span>
-                4.99
-              </span>
-              <span className="price-type">one-time payment</span>
-            </div>
-            <ul className="features">
-              <li>4 Additional Voice Clones</li>
-              <li>Unlimited Text-to-Speech Usage</li>
-              <li>Premium Voice Quality</li>
-              <li>One-Time Purchase, No Subscription</li>
-            </ul>
-            <button 
-              onClick={handlePurchase}
-              disabled={isLoading || !currentUser}
-              className="purchase-button"
-            >
-              {isLoading ? 'Processing...' : 'Upgrade Now'}
-            </button>
-            {error && <p className="error-message">{error}</p>}
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <div className="voice-purchase">
+        <div className="purchase-card">
+          <h3>Unlock Premium Voices</h3>
+          <div className="price">
+            <span className="price-amount">
+              <span className="price-currency">$</span>
+              4.99
+            </span>
+            <span className="price-type">one-time payment</span>
           </div>
+          <ul className="features">
+            <li>4 Additional Voice Clones</li>
+            <li>Unlimited Text-to-Speech Usage</li>
+            <li>Premium Voice Quality</li>
+            <li>One-Time Purchase, No Subscription</li>
+          </ul>
+          <button 
+            onClick={handlePurchase}
+            disabled={isLoading || !currentUser}
+            className="purchase-button"
+          >
+            {isLoading ? 'Processing...' : 'Upgrade Now'}
+          </button>
+          {error && <p className="error-message">{error}</p>}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 

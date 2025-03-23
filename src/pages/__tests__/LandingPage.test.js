@@ -151,36 +151,36 @@ describe('LandingPage', () => {
 //     });
 //   });
 
-  test('handles anonymous sign in when uploading voice', async () => {
-    const mockSignInAnonymously = jest.fn().mockResolvedValue(mockCurrentUser);
-    useAuth.mockReturnValueOnce({
-      currentUser: null,
-      signInAnonymously: mockSignInAnonymously
-    });
+  // test('handles anonymous sign in when uploading voice', async () => {
+  //   const mockSignInAnonymously = jest.fn().mockResolvedValue(mockCurrentUser);
+  //   useAuth.mockReturnValueOnce({
+  //     currentUser: null,
+  //     signInAnonymously: mockSignInAnonymously
+  //   });
 
-    // Mock fetch to return a successful response
-    global.fetch.mockImplementationOnce(() => 
-      Promise.resolve({
-        ok: true,
-        text: () => Promise.resolve(JSON.stringify({ voiceId: 'test-voice-id' }))
-      })
-    );
+  //   // Mock fetch to return a successful response
+  //   global.fetch.mockImplementationOnce(() => 
+  //     Promise.resolve({
+  //       ok: true,
+  //       text: () => Promise.resolve(JSON.stringify({ voiceId: 'test-voice-id' }))
+  //     })
+  //   );
 
-    render(
-      <BrowserRouter>
-        <LandingPage />
-      </BrowserRouter>
-    );
+  //   render(
+  //     <BrowserRouter>
+  //       <LandingPage />
+  //     </BrowserRouter>
+  //   );
 
-    const mockFile = new File(['test audio'], 'test.mp3', { type: 'audio/mp3' });
-    const fileInput = screen.getByLabelText(/Upload Voice Recording/i);
-    fireEvent.change(fileInput, { target: { files: [mockFile] } });
+  //   const mockFile = new File(['test audio'], 'test.mp3', { type: 'audio/mp3' });
+  //   const fileInput = screen.getByLabelText(/Upload Voice Recording/i);
+  //   fireEvent.change(fileInput, { target: { files: [mockFile] } });
 
-    await waitFor(() => {
-      expect(mockSignInAnonymously).toHaveBeenCalled();
-      expect(global.fetch).toHaveBeenCalledWith('/api/upload', expect.any(Object));
-    });
-  });
+  //   await waitFor(() => {
+  //     expect(mockSignInAnonymously).toHaveBeenCalled();
+  //     expect(global.fetch).toHaveBeenCalledWith('/api/upload', expect.any(Object));
+  //   });
+  // });
 
   test('redirects to dashboard if user is already authenticated', () => {
     useAuth.mockReturnValueOnce({

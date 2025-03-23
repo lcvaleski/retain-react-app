@@ -3,10 +3,36 @@
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
-  margin-bottom: 2rem;
   width: 100%;
   max-width: 800px;
   margin: 0 auto 2rem auto;
+  height: 80px;
+  overflow: hidden;
+}
+
+.carousel-track {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-item {
+  text-align: center;
+  font-style: italic;
+  color: var(--primary);
+  font-size: 1.1rem;
+  animation: fadeInOut 0.5s ease;
+}
+
+@keyframes fadeInOut {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 .message-ideas-header {
@@ -26,34 +52,27 @@
   margin: 0;
 }
 
-.message-carousel-container {
-  height: 80px;
+.message-idea-wrapper {
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  position: relative;
 }
 
 .message-idea {
   text-align: center;
-  transition: all 0.5s ease-in-out;
-  position: absolute;
   font-style: italic;
   color: var(--primary);
   font-size: 1.1rem;
-  width: 100%;
+  transition: opacity 0.5s ease;
+  opacity: 1;
+  margin: 0;
   padding: 0 1rem;
 }
 
-.fade-in {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.fade-out {
+.message-idea.transitioning {
   opacity: 0;
-  transform: translateY(-20px);
 }
 
 /* Responsive adjustments */
@@ -63,7 +82,7 @@
     padding: 1rem;
   }
 
-  .message-idea {
+  .carousel-item {
     font-size: 1rem;
   }
 } 
