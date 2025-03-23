@@ -2,7 +2,7 @@ import React from 'react';
 import Modal from './common/Modal';
 import '../styles/DeleteVoiceModal.css';
 
-function DeleteVoiceModal({ isOpen, onClose, onConfirm, voiceName, isDeleting }) {
+function DeleteVoiceModal({ isOpen, onClose, onConfirm, isDeleting }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="delete-voice-modal">

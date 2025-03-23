@@ -130,8 +130,6 @@ function VoicePurchase({ isOpen, onClose, onPurchaseComplete }) {
           </div>
           <ul className="features">
             <li>4 Additional Voice Clones</li>
-            <li>Unlimited Text-to-Speech Usage</li>
-            <li>Premium Voice Quality</li>
             <li>One-Time Purchase, No Subscription</li>
           </ul>
           <button 
