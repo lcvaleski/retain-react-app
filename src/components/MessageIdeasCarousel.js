@@ -15,20 +15,30 @@ const messages = [
 
 function MessageIdeasCarousel() {
   const [index, setIndex] = useState(0);
+  const [prevIndex, setPrevIndex] = useState(-1);
 
   useEffect(() => {
     const timer = setInterval(() => {
+      setPrevIndex(index);
       setIndex((current) => (current + 1) % messages.length);
     }, 4000);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [index]);
 
   return (
     <div className="message-ideas-carousel">
       <div className="carousel-track">
-        <div className="carousel-item">
-          {messages[index]}
-        </div>
+        {messages.map((message, i) => (
+          <div
+            key={i}
+            className={`carousel-item ${
+              i === index ? 'active' : i === prevIndex ? 'previous' : ''
+            }`}
+          >
+            {message}
+          </div>
+        ))}
       </div>
     </div>
   );

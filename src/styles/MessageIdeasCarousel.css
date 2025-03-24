@@ -1,38 +1,48 @@
 .message-ideas-carousel {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  padding: var(--space-4, 1.5rem);
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto 2rem auto;
-  height: 80px;
+  max-width: var(--content-width, 800px);
+  margin: var(--space-4, 1.5rem) auto;
+  height: var(--carousel-height, 80px);
   overflow: hidden;
+  position: relative;
 }
 
 .carousel-track {
+  position: relative;
   height: 100%;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .carousel-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-style: italic;
   color: var(--primary);
-  font-size: 1.1rem;
-  animation: fadeInOut 0.5s ease;
+  font-size: var(--text-md, 1.1rem);
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
 }
 
-@keyframes fadeInOut {
-  from {
-    clip-path: inset(0 0 100% 0);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-  }
+.carousel-item.active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.carousel-item.previous {
+  transform: translateY(-100%);
+  opacity: 0;
 }
 
 .message-ideas-header {
@@ -78,11 +88,11 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .message-ideas-carousel {
-    margin: 1rem;
-    padding: 1rem;
+    margin: var(--space-3, 1rem) 0;
+    height: var(--carousel-height-mobile, 70px);
   }
 
   .carousel-item {
-    font-size: 1rem;
+    font-size: var(--text-sm, 1rem);
   }
 } 
