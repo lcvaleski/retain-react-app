@@ -26,36 +26,48 @@ const stripe = new Stripe(process.env.NODE_ENV === 'production'
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 module.exports = async (req, res) => {
+  // For Vercel serverless functions, we need to get the raw body differently
+  const chunks = [];
+  let rawBody;
+
+  // If the request is already parsed (has body), use it
+  if (req.body) {
+    rawBody = JSON.stringify(req.body);
+  } else {
+    // Otherwise, get the raw body from the request stream
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    rawBody = Buffer.concat(chunks).toString('utf8');
+  }
+
   console.log('[DEBUG] Webhook received:', {
     headers: req.headers['stripe-signature'] ? 'Signature present' : 'No signature',
-    hasRawBody: !!req.rawBody,
+    hasRawBody: !!rawBody,
     method: req.method,
     contentType: req.headers['content-type']
   });
+
+  console.log('[DEBUG] Full headers:', req.headers);
+  console.log('[DEBUG] Content type:', req.headers['content-type']);
+  console.log('[DEBUG] Body type:', typeof req.body);
 
   const sig = req.headers['stripe-signature'];
   let event;
 
   try {
-    // Get the raw body as a buffer
-    const rawBody = req.rawBody;
-    
     if (!rawBody || !sig) {
       console.error('[DEBUG] Missing raw body or signature:', {
         hasRawBody: !!rawBody,
-        hasSignature: !!sig
+        hasSignature: !!sig,
+        bodyLength: rawBody?.length
       });
       return res.status(400).json({ error: 'Missing raw body or signature' });
     }
 
-    try {
-      // Verify the event with the raw body and signature
-      event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
-      console.log('[DEBUG] Webhook verified successfully');
-    } catch (err) {
-      console.error(`[DEBUG] Webhook signature verification failed:`, err.message);
-      return res.status(400).json({ error: `Webhook signature verification failed: ${err.message}` });
-    }
+    // Verify the event with the raw body and signature
+    event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
+    console.log('[DEBUG] Webhook verified successfully');
 
     // Handle successful checkout
     if (event.type === 'checkout.session.completed') {
