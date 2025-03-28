@@ -5,7 +5,7 @@ const apiRouter = require('./routes/api');
 const app = express();
 
 // Handle Stripe webhook raw bodies BEFORE any other middleware
-app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }));
+app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), require('../api/stripe-webhook'));
 
 // Regular middleware for other routes
 app.use(cors());
@@ -22,7 +22,9 @@ app.use((req, res, next) => {
 
 // Request logging
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`, req.body);
+  if (req.path !== '/api/stripe-webhook') {  // Don't log webhook bodies
+    console.log(`${req.method} ${req.path}`, req.body);
+  }
   next();
 });
 

@@ -27,7 +27,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server": "nodemon --no-deprecation server/dev-server.js",
+    "server": "NODE_ENV=development nodemon --no-deprecation server/dev-server.js",
     "dev": "concurrently \"npm run server\" \"BROWSER=none npm start\"",
     "vercel-build": "npm run build"
   },
