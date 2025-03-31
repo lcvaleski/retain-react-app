@@ -1,9 +1,13 @@
 const Stripe = require('stripe');
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.NODE_ENV === 'production' 
-  ? process.env.STRIPE_SECRET_KEY_LIVE 
-  : process.env.STRIPE_SECRET_KEY_TEST
+const isDevelopment = process.env.NODE_ENV !== 'production' || 
+  process.env.VERCEL_ENV === 'development' ||
+  (process.env.CLIENT_URL || '').includes('localhost') ||
+  !process.env.STRIPE_SECRET_KEY_LIVE;
+
+const stripe = new Stripe(isDevelopment 
+  ? process.env.STRIPE_SECRET_KEY_TEST 
+  : process.env.STRIPE_SECRET_KEY_LIVE
 );
 
 module.exports = async (req, res) => {

@@ -32,3 +32,5 @@ keys/
 firestore.rules
 .firebaserc
 firebase-debug.log
+.vercel
+.env*.local
