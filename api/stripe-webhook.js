@@ -64,7 +64,45 @@ export default async function handler(req, res) {
 
     switch (event.type) {
       case 'checkout.session.completed':
-        console.log('Checkout session completed:', event.data.object);
+        const session = event.data.object;
+        console.log('Checkout session completed:', session.id);
+
+        // Get the user ID from the metadata
+        const userId = session.metadata.userId; // Ensure this is set when creating the session
+        if (!userId) {
+          throw new Error('No userId in session metadata');
+        }
+
+        // Update the user's document in Firestore
+        const userRef = admin.firestore().doc(`users/${userId}`);
+        await admin.firestore().runTransaction(async (transaction) => {
+          const userDoc = await transaction.get(userRef);
+          
+          if (!userDoc.exists) {
+            // Create new user document if it doesn't exist
+            transaction.set(userRef, {
+              purchasedVoices: 4, // Update this based on your logic
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              lastPurchase: {
+                sessionId: session.id,
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
+              }
+            });
+          } else {
+            // Update existing user document
+            transaction.update(userRef, {
+              purchasedVoices: admin.firestore.FieldValue.increment(4), // Increment by 4 or however many voices purchased
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              lastPurchase: {
+                sessionId: session.id,
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
+              }
+            });
+          }
+        });
+        
+        console.log(`Successfully updated user ${userId} with purchase`);
         break;
       default:
         console.log(`Unhandled event type: ${event.type}`);
