@@ -55,22 +55,12 @@ export default async function handler(req, res) {
     }
 
     const cloneData = await cloneResponse.json();
-    
-    // Log the response for debugging
-    console.log('Clone response:', cloneData);
-
-    // Verify we have a voiceId before sending response
-    if (!cloneData.voiceId) {
-      throw new Error('No voice ID in clone response');
-    }
 
     res.status(200).json({
-      success: true,
-      voiceId: cloneData.voiceId, // Make sure this is explicitly set
+      ...cloneData,
       message: 'Voice cloned successfully',
       size: audioFile.size,
       type: audioFile.mimetype,
-      ...cloneData // Include other relevant data
     });
 
   } catch (error) {
