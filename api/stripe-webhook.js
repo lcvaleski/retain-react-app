@@ -1,7 +1,15 @@
-const Stripe = require('stripe');
-const admin = require('firebase-admin');
+// api/stripe-webhook.js
 
-// Initialize Firebase Admin if not already initialized
+import { buffer } from 'micro';
+import Stripe from 'stripe';
+import admin from 'firebase-admin';
+
+export const config = {
+  api: {
+    bodyParser: false, // Stripe requires the raw body
+  },
+};
+
 if (!admin.apps.length) {
   try {
     const base64 = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_BASE64;
@@ -15,7 +23,7 @@ if (!admin.apps.length) {
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      projectId: 'retain-react'
+      projectId: 'retain-react',
     });
 
     console.log('[DEBUG] Firebase Admin initialized');
@@ -25,26 +33,34 @@ if (!admin.apps.length) {
   }
 }
 
-const stripe = new Stripe(process.env.NODE_ENV === 'production' 
-  ? process.env.STRIPE_SECRET_KEY_LIVE 
-  : process.env.STRIPE_SECRET_KEY_TEST
+const stripe = new Stripe(
+  process.env.NODE_ENV === 'production'
+    ? process.env.STRIPE_SECRET_KEY_LIVE
+    : process.env.STRIPE_SECRET_KEY_TEST,
+  {
+    apiVersion: '2022-11-15', // Or your preferred Stripe API version
+  }
 );
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   console.log('[DEBUG] Webhook received:', {
     headers: req.headers['stripe-signature'] ? 'Signature present' : 'No signature',
-    hasRawBody: !!req.rawBody,
     method: req.method,
-    contentType: req.headers['content-type']
+    contentType: req.headers['content-type'],
   });
 
-  try {
-    const sig = req.headers['stripe-signature'];
-    const buf = req.body;
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).end('Method Not Allowed');
+  }
 
-    const event = stripe.webhooks.constructEvent(buf, sig, endpointSecret);
+  try {
+    const rawBody = await buffer(req);
+    const sig = req.headers['stripe-signature'];
+
+    const event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
 
     switch (event.type) {
       case 'checkout.session.completed':
@@ -54,9 +70,9 @@ module.exports = async (req, res) => {
         console.log(`Unhandled event type: ${event.type}`);
     }
 
-    res.status(200).send();
+    res.status(200).send('Received');
   } catch (err) {
     console.error('[DEBUG] Webhook error:', err.message);
     res.status(400).send(`Webhook Error: ${err.message}`);
   }
-};
+}
