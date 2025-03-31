@@ -25,7 +25,6 @@ if (!admin.apps.length) {
   }
 }
 
-// Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.NODE_ENV === 'production' 
   ? process.env.STRIPE_SECRET_KEY_LIVE 
   : process.env.STRIPE_SECRET_KEY_TEST
