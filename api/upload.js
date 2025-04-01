@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 
 export const config = {
   api: {
-    bodyParser: false, // Disable body parsing, we'll use formidable
+    bodyParser: false, // Important for file uploads
     maxDuration: 30, // This function might take a while
   },
 };
@@ -15,10 +15,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Parse the multipart form data
     const form = new IncomingForm({
       maxFileSize: 10 * 1024 * 1024, // 10MB limit
-      filter: (part) => part.mimetype?.startsWith('audio/'), // Only accept audio files
+      keepExtensions: true,
+      filter: (part) => part.mimetype?.startsWith('audio/'),
     });
 
     // Parse the form
@@ -36,6 +36,7 @@ export default async function handler(req, res) {
 
     // Read the file
     const fileBuffer = await fs.readFile(audioFile.filepath);
+    const base64Audio = fileBuffer.toString('base64');
 
     // Call the clone-voice endpoint
     const cloneResponse = await fetch(`${process.env.CLIENT_URL}/api/clone-voice`, {
@@ -44,23 +45,23 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        audioBuffer: fileBuffer.toString('base64'),
+        audioBuffer: base64Audio,
         fileName: audioFile.originalFilename,
         mimeType: audioFile.mimetype
       })
     });
 
     if (!cloneResponse.ok) {
-      throw new Error('Voice cloning failed');
+      const errorText = await cloneResponse.text();
+      console.error('Clone voice error:', errorText);
+      throw new Error(`Voice cloning failed: ${errorText}`);
     }
 
     const cloneData = await cloneResponse.json();
 
     res.status(200).json({
-      ...cloneData,
-      message: 'Voice cloned successfully',
-      size: audioFile.size,
-      type: audioFile.mimetype,
+      success: true,
+      ...cloneData
     });
 
   } catch (error) {
@@ -69,5 +70,16 @@ export default async function handler(req, res) {
       error: 'Upload failed', 
       details: process.env.NODE_ENV === 'development' ? error.message : undefined 
     });
+  } finally {
+    // Clean up any temporary files
+    if (req.files) {
+      for (const file of Object.values(req.files)) {
+        try {
+          await fs.unlink(file.filepath);
+        } catch (error) {
+          console.error('Error cleaning up file:', error);
+        }
+      }
+    }
   }
 } 
