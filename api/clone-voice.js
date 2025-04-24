@@ -33,7 +33,6 @@ export default async function handler(req, res) {
     });
     formData.append('name', `Voice Clone ${Date.now()}`);
     formData.append('language', 'en');
-    formData.append('mode', 'stability');
     formData.append('enhance', 'true');
 
     const response = await fetch(CARTESIA_API_URL, {
